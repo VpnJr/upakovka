@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Оформление заказа — Upakovka09</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <header class="header">
+    <a href="index.html" class="logo">Upakovka<span>09</span></a>
+    <a href="index.html" class="back-link">← Вернуться в каталог</a>
+  </header>
+
+  <div class="checkout-page">
+    <div id="checkout-form-section">
+      <div class="checkout-layout">
+
+        <!-- ФОРМА -->
+        <div class="checkout-form-wrap">
+          <h1 class="page-title">Оформление заказа</h1>
+
+          <div class="form-section">
+            <h2 class="form-section-title">📞 Контактные данные</h2>
+            <div class="field">
+              <label>Ваше имя</label>
+              <input type="text" id="f-name" placeholder="Как к вам обращаться?" />
+            </div>
+            <div class="field">
+              <label>Номер телефона <span class="required">*</span></label>
+              <div class="phone-wrap">
+                <span class="phone-prefix">+7</span>
+                <input type="tel" id="f-phone" placeholder="(999) 000-00-00" maxlength="15" oninput="formatPhone(this)" />
+              </div>
+              <span class="field-error" id="phone-error">Введите корректный номер телефона</span>
+              <span class="field-hint">Мы позвоним для подтверждения заказа</span>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h2 class="form-section-title">🚚 Доставка</h2>
+            <div class="delivery-options">
+              <label class="delivery-opt">
+                <input type="radio" name="delivery" value="courier" checked onchange="updateDelivery()" />
+                <div class="delivery-info">
+                  <div class="delivery-name">Курьер</div>
+                  <div class="delivery-sub">1–2 рабочих дня</div>
+                </div>
+                <div class="delivery-price">300 ₽</div>
+              </label>
+              <label class="delivery-opt">
+                <input type="radio" name="delivery" value="pickup" onchange="updateDelivery()" />
+                <div class="delivery-info">
+                  <div class="delivery-name">Самовывоз</div>
+                  <div class="delivery-sub">Сегодня, 9:00–18:00</div>
+                </div>
+                <div class="delivery-price free">Бесплатно</div>
+              </label>
+              <label class="delivery-opt">
+                <input type="radio" name="delivery" value="cdek" onchange="updateDelivery()" />
+                <div class="delivery-info">
+                  <div class="delivery-name">СДЭК / Почта</div>
+                  <div class="delivery-sub">3–5 рабочих дней</div>
+                </div>
+                <div class="delivery-price">500 ₽</div>
+              </label>
+            </div>
+            <div class="field" id="address-field">
+              <label>Адрес доставки</label>
+              <input type="text" id="f-address" placeholder="Город, улица, дом, квартира" />
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h2 class="form-section-title">💳 Способ оплаты</h2>
+            <div class="pay-options">
+              <label class="pay-opt">
+                <input type="radio" name="payment" value="cash" checked />
+                <div class="pay-info">
+                  <div class="pay-name">💵 Наличными при получении</div>
+                </div>
+              </label>
+              <label class="pay-opt">
+                <input type="radio" name="payment" value="card" />
+                <div class="pay-info">
+                  <div class="pay-name">💳 Картой онлайн или при доставке</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="field">
+              <label>Комментарий к заказу</label>
+              <textarea id="f-comment" rows="3" placeholder="Например: позвонить за час до доставки..."></textarea>
+            </div>
+          </div>
+
+          <button class="btn-primary btn-block btn-large" onclick="submitOrder()">
+            Отправить заказ →
+          </button>
+          <p class="form-note">Нажимая кнопку, вы соглашаетесь с условиями обработки персональных данных</p>
+        </div>
+
+        <!-- СВОДКА ЗАКАЗА -->
+        <div class="order-summary-wrap">
+          <div class="order-summary">
+            <h2 class="form-section-title">Ваш заказ</h2>
+            <div id="summary-items"></div>
+            <div class="summary-row"><span>Товары</span><span id="summary-goods">0 ₽</span></div>
+            <div class="summary-row"><span>Доставка</span><span id="summary-delivery">300 ₽</span></div>
+            <div class="summary-row total"><span>Итого</span><span id="summary-total">0 ₽</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ЭКРАН УСПЕХА -->
+    <div id="success-section" style="display:none" class="success-screen">
+      <div class="success-icon">✅</div>
+      <h2>Заказ принят!</h2>
+      <p id="success-message">Мы скоро с вами свяжемся.</p>
+      <div class="receipt" id="receipt"></div>
+      <a href="index.html" class="btn-primary">Вернуться в каталог →</a>
+    </div>
+  </div>
+
+  <script src="js/products.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/checkout.js"></script>
+</body>
+</html>
