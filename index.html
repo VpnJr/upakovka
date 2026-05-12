@@ -1,29 +1,32 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Upakovka09 — Одноразовая упаковка</title>
-  <link rel="stylesheet" href="css/style.css"/>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Upakovka09 — Одноразовая упаковка</title>
+<link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
 
 <header class="header">
   <a href="index.html" class="logo">Upakovka<span>09</span></a>
-  <nav class="nav">
-    <a href="#catalog">Каталог</a>
-    <a href="#about">О нас</a>
-    <a href="#contacts">Контакты</a>
-  </nav>
-  <button class="cart-btn" onclick="openCart()">
-    🛒 Корзина <span class="cart-badge" id="cart-count">0</span>
-  </button>
+  <div class="header-search">
+    <span class="hs-icon">🔍</span>
+    <input type="text" id="header-search" placeholder="Поиск товаров..." oninput="setSearch(this.value);document.getElementById('sidebar-search').value=this.value"/>
+  </div>
+  <div class="header-right">
+    <a href="#contacts" class="header-link">Контакты</a>
+    <button class="cart-btn" onclick="openCart()">
+      🛒 Корзина <span class="cart-count-badge cart-badge">0</span>
+    </button>
+  </div>
 </header>
 
+<!-- HERO -->
 <section class="hero">
   <div class="hero-text">
     <h1>Одноразовая упаковка<br>оптом и в розницу</h1>
-    <p>Контейнеры, стаканы, пакеты, тарелки. Быстрая доставка по всей России.</p>
+    <p>Контейнеры, стаканы, пакеты, тарелки. Быстрая доставка по России.</p>
     <a href="#catalog" class="btn-primary">Смотреть каталог →</a>
   </div>
   <div class="hero-stats">
@@ -33,18 +36,74 @@
   </div>
 </section>
 
-<section class="section" id="catalog">
-  <h2 class="section-title">Каталог товаров</h2>
-  <div class="cat-filters">
-    <button class="cat-btn active" data-cat="all">Все товары</button>
-    <button class="cat-btn" data-cat="containers">📦 Контейнеры</button>
-    <button class="cat-btn" data-cat="cups">☕ Стаканы</button>
-    <button class="cat-btn" data-cat="bags">🛍️ Пакеты</button>
-    <button class="cat-btn" data-cat="plates">🍽️ Тарелки</button>
+<!-- КАТАЛОГ -->
+<section id="catalog" class="catalog-section">
+  <div class="catalog-layout">
+
+    <!-- ФИЛЬТР-ПАНЕЛЬ -->
+    <aside class="filter-panel">
+      <div class="fp-block">
+        <div class="fp-title">Поиск</div>
+        <div class="fp-search-wrap">
+          <span>🔍</span>
+          <input type="text" id="sidebar-search" placeholder="Название товара..." oninput="setSearch(this.value);document.getElementById('header-search').value=this.value"/>
+        </div>
+      </div>
+
+      <div class="fp-block">
+        <div class="fp-title">Категория</div>
+        <div class="fp-cats">
+          <button class="cat-btn active" data-cat="all" onclick="setCat('all',this)">Все товары</button>
+          <button class="cat-btn" data-cat="containers" onclick="setCat('containers',this)">📦 Контейнеры</button>
+          <button class="cat-btn" data-cat="cups" onclick="setCat('cups',this)">☕ Стаканы</button>
+          <button class="cat-btn" data-cat="bags" onclick="setCat('bags',this)">🛍️ Пакеты</button>
+          <button class="cat-btn" data-cat="plates" onclick="setCat('plates',this)">🍽️ Тарелки</button>
+        </div>
+      </div>
+
+      <div class="fp-block">
+        <div class="fp-title">Цена, ₽</div>
+        <div class="fp-price-row">
+          <input type="number" id="price-min" placeholder="от" min="0" oninput="setPriceMin(this.value)"/>
+          <span>—</span>
+          <input type="number" id="price-max" placeholder="до" min="0" oninput="setPriceMax(this.value)"/>
+        </div>
+      </div>
+
+      <div class="fp-block">
+        <div class="fp-title">Значок</div>
+        <div class="fp-badges">
+          <label class="fp-check"><input type="checkbox" data-badge="hit" onchange="toggleBadgeFilter(this)"/> 🔥 Хит продаж</label>
+          <label class="fp-check"><input type="checkbox" data-badge="new" onchange="toggleBadgeFilter(this)"/> 🆕 Новинка</label>
+          <label class="fp-check"><input type="checkbox" data-badge="eco" onchange="toggleBadgeFilter(this)"/> 🌿 Эко</label>
+          <label class="fp-check"><input type="checkbox" data-badge="sale" onchange="toggleBadgeFilter(this)"/> 💸 Скидка</label>
+        </div>
+      </div>
+
+      <button class="fp-reset" onclick="resetFilters()">✕ Сбросить фильтры</button>
+    </aside>
+
+    <!-- ТОВАРЫ -->
+    <div class="catalog-main">
+      <div class="catalog-toolbar">
+        <span class="catalog-count" id="catalog-count"></span>
+        <div class="catalog-sort">
+          <span>Сортировка:</span>
+          <select id="sort-select" onchange="setSort(this.value)" class="sort-select">
+            <option value="default">По умолчанию</option>
+            <option value="price_asc">Сначала дешевле</option>
+            <option value="price_desc">Сначала дороже</option>
+            <option value="name">По названию А–Я</option>
+          </select>
+        </div>
+      </div>
+      <div class="products-grid" id="products-grid"></div>
+    </div>
+
   </div>
-  <div class="products-grid" id="products-grid"></div>
 </section>
 
+<!-- О НАС -->
 <section class="section section-gray" id="about">
   <h2 class="section-title">Почему выбирают нас</h2>
   <div class="features-grid">
@@ -65,24 +124,95 @@
 </section>
 
 <footer class="footer">
-  <div><div class="footer-logo">Upakovka<span>09</span></div><p>Одноразовая упаковка оптом и в розницу. Работаем с 2015 года.</p></div>
-  <div><h4>Каталог</h4><a href="#catalog">Контейнеры</a><a href="#catalog">Стаканы</a><a href="#catalog">Пакеты</a><a href="#catalog">Тарелки</a></div>
+  <div><div class="footer-logo">Upakovka<span>09</span></div><p>Одноразовая упаковка оптом и в розницу.</p></div>
+  <div><h4>Каталог</h4><a href="#catalog" onclick="setCat('containers')">Контейнеры</a><a href="#catalog" onclick="setCat('cups')">Стаканы</a><a href="#catalog" onclick="setCat('bags')">Пакеты</a></div>
   <div><h4>Покупателям</h4><a href="#">Доставка и оплата</a><a href="#">Оптовые цены</a><a href="#">Возврат</a></div>
-  <div><h4>Контакты</h4><p>+7 (938) 000-00-00</p><p>info@upakovka09.ru</p><p>Пн–Пт: 9:00–18:00</p></div>
+  <div><h4>Контакты</h4><p>+7 (938) 000-00-00</p><p>info@upakovka09.ru</p></div>
 </footer>
 
 <!-- КОРЗИНА -->
 <div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
-<div class="cart-sidebar" id="cart-sidebar">
-  <div class="cart-header">
-    <h2>Корзина <span class="cart-badge" id="cart-count2">0</span></h2>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-drawer-header">
+    <h2>Корзина <span class="cart-count-badge cart-badge">0</span></h2>
     <button onclick="closeCart()">✕</button>
   </div>
-  <div class="cart-body" id="cart-body"></div>
+  <div class="cart-drawer-body" id="cart-drawer-body"></div>
+  <div class="cart-drawer-footer" id="cart-drawer-footer" style="display:none">
+    <div class="cart-drawer-total">Итого: <strong id="cart-total-val">0 ₽</strong></div>
+    <a href="checkout.html" class="btn-primary btn-block">Оформить заказ →</a>
+  </div>
 </div>
+
+<div id="cart-toast" class="cart-toast">✓ Товар добавлен в корзину</div>
 
 <script src="js/data.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/catalog.js"></script>
+<script>
+// Фильтр по значку
+var activeBadges=[];
+function toggleBadgeFilter(cb){
+  var badge=cb.dataset.badge;
+  if(cb.checked){ if(!activeBadges.includes(badge)) activeBadges.push(badge); }
+  else { activeBadges=activeBadges.filter(function(b){return b!==badge;}); }
+  // Применяем через каталог
+  var orig=window._origRenderCatalog||renderCatalog;
+  renderCatalogWithBadges();
+}
+// Расширяем каталог фильтром бейджей
+var _origRender=renderCatalog;
+function renderCatalogWithBadges(){
+  var grid=document.getElementById('products-grid');
+  if(!grid) return;
+  var list=getProducts();
+  if(catalogState.cat!=='all') list=list.filter(function(p){return p.cat===catalogState.cat;});
+  if(catalogState.search){ var q=catalogState.search.toLowerCase(); list=list.filter(function(p){return p.name.toLowerCase().includes(q)||p.meta.toLowerCase().includes(q);}); }
+  if(catalogState.priceMin!=='') list=list.filter(function(p){return p.price>=parseFloat(catalogState.priceMin);});
+  if(catalogState.priceMax!=='') list=list.filter(function(p){return p.price<=parseFloat(catalogState.priceMax);});
+  if(activeBadges.length) list=list.filter(function(p){return activeBadges.includes(p.badge);});
+  list=list.slice();
+  if(catalogState.sort==='price_asc') list.sort(function(a,b){return a.price-b.price;});
+  else if(catalogState.sort==='price_desc') list.sort(function(a,b){return b.price-a.price;});
+  else if(catalogState.sort==='name') list.sort(function(a,b){return a.name.localeCompare(b.name,'ru');});
+  var countEl=document.getElementById('catalog-count');
+  if(countEl) countEl.textContent=list.length+' '+(list.length===1?'товар':list.length<5?'товара':'товаров');
+  var BADGE_LABEL={hit:'Хит продаж',new:'Новинка',eco:'Эко',sale:'Скидка'};
+  var BADGE_CLS={hit:'badge-hit',new:'badge-new',eco:'badge-eco',sale:'badge-sale'};
+  if(!list.length){
+    grid.innerHTML='<div class="catalog-empty"><div style="font-size:48px">🔍</div><p>Ничего не найдено</p><button class="btn-outline" onclick="resetFilters()">Сбросить фильтры</button></div>';
+    return;
+  }
+  grid.innerHTML=list.map(function(p){
+    var img=p.photo?'<img src="'+p.photo+'" alt="'+p.name+'" loading="lazy">'
+      :'<div class="card-emoji">'+p.emoji+'</div>';
+    return '<div class="product-card" onclick="location.href=\'product.html?id='+p.id+'\'">'+
+      '<div class="product-img">'+img+
+        (p.badge?'<span class="product-badge '+BADGE_CLS[p.badge]+'">'+BADGE_LABEL[p.badge]+'</span>':'')+
+        (p.oldPrice?'<span class="product-discount">-'+Math.round((1-p.price/p.oldPrice)*100)+'%</span>':'')+
+      '</div>'+
+      '<div class="product-info">'+
+        '<div class="product-name">'+p.name+'</div>'+
+        '<div class="product-meta">'+p.meta+'</div>'+
+        '<div class="product-price-row">'+
+          '<div class="product-price">'+p.price.toFixed(2)+' ₽</div>'+
+          (p.oldPrice?'<div class="product-old">'+p.oldPrice.toFixed(2)+' ₽</div>':'')+
+        '</div>'+
+        '<button class="add-cart-btn" onclick="event.stopPropagation();quickAdd('+p.id+',this)">+ В корзину</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+// Заменяем renderCatalog
+window.renderCatalog=renderCatalogWithBadges;
+var _resetOrig=resetFilters;
+window.resetFilters=function(){
+  activeBadges=[];
+  document.querySelectorAll('.fp-badges input[type=checkbox]').forEach(function(c){c.checked=false;});
+  _resetOrig();
+};
+renderCatalogWithBadges();
+refreshCartUI();
+</script>
 </body>
 </html>

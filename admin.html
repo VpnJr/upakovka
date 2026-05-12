@@ -1,116 +1,466 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Админ-панель — Upakovka09</title>
-  <link rel="stylesheet" href="css/style.css"/>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Админ — Upakovka09</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a1a;font-size:14px;line-height:1.5}
+:root{--brand:#7B1E2E;--brand-l:#9B2535;--brand-d:#5A1220;--brand-bg:#F9EDEF;--sidebar-w:240px;--r:8px;--rl:12px;--border:#e2e5e9;--muted:#6b7280;--gray:#f8f9fa}
+
+/* ── LOGIN ─────────────────── */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--brand-d) 0%,var(--brand) 100%);display:flex;align-items:center;justify-content:center;z-index:1000}
+.login-box{background:#fff;border-radius:16px;padding:40px;width:380px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.login-logo{font-size:28px;font-weight:600;color:var(--brand);margin-bottom:4px}
+.login-logo span{opacity:.5;font-weight:400}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+.login-box .field{text-align:left;margin-bottom:16px}
+.login-box label{font-size:12px;color:var(--muted);font-weight:500;display:block;margin-bottom:5px}
+.login-box input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;outline:none;transition:border-color .15s;font-family:inherit}
+.login-box input:focus{border-color:var(--brand)}
+.login-box input.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#pw-err{color:#c0392b;font-size:12px;margin-top:4px;display:none}
+.btn-login{width:100%;background:var(--brand);color:#fff;border:none;border-radius:var(--r);padding:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:4px}
+.btn-login:hover{background:var(--brand-l)}
+.login-hint{font-size:12px;color:var(--muted);margin-top:16px}
+.login-hint code{background:var(--gray);padding:2px 6px;border-radius:4px;font-size:11px}
+
+/* ── APP SHELL ─────────────── */
+#admin-app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ───────────────── */
+.sidebar{width:var(--sidebar-w);background:var(--brand-d);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+.sidebar-logo{padding:20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-logo-text{font-size:18px;font-weight:600;color:#fff}
+.sidebar-logo-text span{opacity:.5;font-weight:400}
+.sidebar-logo-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
+.sidebar-section{font-size:10px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.8px;text-transform:uppercase;padding:12px 20px 6px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:rgba(255,255,255,.7);border-left:3px solid transparent;transition:all .15s;position:relative;user-select:none}
+.sidebar-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:#fff}
+.sidebar-item-icon{font-size:18px;flex-shrink:0}
+.sidebar-item-label{font-size:13px;font-weight:500}
+.sidebar-item-badge{background:#e74c3c;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;margin-left:auto}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.sidebar-clock{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:8px}
+.sidebar-site-link{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;padding:6px 0;transition:color .15s}
+.sidebar-site-link:hover{color:#fff}
+.sidebar-logout{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.4);cursor:pointer;padding:6px 0;background:none;border:none;font-family:inherit;width:100%;transition:color .15s;margin-top:4px}
+.sidebar-logout:hover{color:rgba(255,255,255,.8)}
+
+/* ── MAIN AREA ─────────────── */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:600}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.content-area{flex:1;overflow-y:auto;padding:24px}
+
+/* ── TAB PANES ─────────────── */
+.tab-pane{display:none;flex-direction:column;gap:20px;height:100%}
+.tab-pane.full-h{height:100%}
+
+/* ── STAT CARDS ────────────── */
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;flex-shrink:0}
+.stat-card{background:#fff;border-radius:var(--rl);padding:18px;border:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.sc-label{font-size:12px;color:var(--muted);font-weight:500}
+.sc-value{font-size:28px;font-weight:700;line-height:1}
+.sc-value.red{color:var(--brand)}
+.sc-value.green{color:#16a34a}
+.sc-value.blue{color:#2563eb}
+.sc-icon{font-size:20px;margin-bottom:2px}
+
+/* ── TOOLBAR ───────────────── */
+.section-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border-radius:var(--rl);padding:14px 16px;border:1px solid var(--border);flex-shrink:0}
+.search-wrap{position:relative;flex:1;min-width:200px}
+.search-wrap input{width:100%;padding:8px 12px 8px 34px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;background:#f8f9fa;transition:border-color .15s,background .15s;font-family:inherit}
+.search-wrap input:focus{border-color:var(--brand);background:#fff}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none}
+.filter-btns{display:flex;gap:4px;flex-wrap:wrap}
+.filter-btn{background:var(--gray);border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);transition:all .15s;font-family:inherit;white-space:nowrap}
+.filter-btn:hover{border-color:var(--brand);color:var(--brand)}
+.filter-btn.active{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-d)}
+.select-ctrl{padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--muted);outline:none;background:#f8f9fa;cursor:pointer;font-family:inherit}
+.select-ctrl:focus{border-color:var(--brand)}
+.toolbar-count{font-size:12px;color:var(--muted);white-space:nowrap}
+
+/* ── BUTTONS ───────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-l)}
+.btn-outline{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}
+.btn-outline:hover{background:var(--brand-bg)}
+.btn-danger{background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca}
+.btn-danger:hover{background:#fee2e2}
+.btn-sm{padding:6px 12px;font-size:12px}
+
+/* ── ORDERS ────────────────── */
+.orders-wrap{display:flex;flex-direction:column;gap:12px;flex:1}
+.order-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--rl);overflow:hidden;transition:border-color .15s}
+.order-card:hover{border-color:#cbd5e1}
+.order-new{border-color:var(--brand)!important;box-shadow:0 0 0 1px var(--brand)}
+.oc-head{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--gray)}
+.oc-head-left{display:flex;align-items:center;gap:10px}
+.oc-id{font-size:13px;font-weight:700;color:#1a1a1a}
+.oc-time{font-size:12px;color:var(--muted)}
+.oc-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.oc-phone{display:flex;align-items:center;gap:10px}
+.oc-phone-icon{width:36px;height:36px;background:var(--brand-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.oc-phone-num{font-size:16px;font-weight:700;color:var(--brand-d)}
+.oc-phone-name{font-size:12px;color:var(--muted)}
+.oc-meta{display:flex;flex-wrap:wrap;gap:6px}
+.oc-pill{background:var(--gray);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--muted)}
+.oc-items{display:flex;flex-wrap:wrap;gap:6px}
+.order-tag{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:4px 10px;font-size:12px;color:#374151}
+.order-tag b{font-weight:600;color:#1a1a1a}
+.oc-comment{font-size:12px;color:var(--muted);background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r);padding:6px 10px}
+.oc-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--gray)}
+.oc-total{font-size:17px;font-weight:700;color:var(--brand)}
+.oc-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.oc-btn{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:#374151;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.oc-btn:hover{border-color:#94a3b8;background:#f1f5f9}
+.oc-btn-ok{background:var(--brand);color:#fff;border-color:var(--brand)}
+.oc-btn-ok:hover{background:var(--brand-l)}
+.oc-btn-del{color:#b91c1c;border-color:#fecaca}
+.oc-btn-del:hover{background:#fef2f2;border-color:#b91c1c}
+.oc-done-label{font-size:12px;color:#16a34a;display:flex;align-items:center;gap:4px}
+.order-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.s-new{background:#fff0ee;color:var(--brand)}
+.s-proc{background:#fef9c3;color:#854d0e}
+.s-done{background:#f0fdf4;color:#166534}
+#orders-empty{text-align:center;padding:60px 20px;color:var(--muted);flex-direction:column;align-items:center;gap:12px;background:#fff;border-radius:var(--rl);border:1px solid var(--border)}
+#orders-empty div{font-size:48px}
+
+/* ── PRODUCTS ADMIN ─────────── */
+.products-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.pa-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--rl);overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s}
+.pa-card:hover{border-color:#94a3b8}
+.pa-card-img{height:140px;background:var(--brand-bg);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.pa-card-img img{width:100%;height:100%;object-fit:cover}
+.pa-card-emoji{font-size:56px}
+.pa-badge{position:absolute;top:8px;left:8px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px}
+.pa-card-body{padding:12px;flex:1;display:flex;flex-direction:column;gap:4px}
+.pa-card-name{font-size:14px;font-weight:600;color:#1a1a1a;line-height:1.3}
+.pa-card-meta{font-size:12px;color:var(--muted)}
+.pa-card-cat{font-size:11px;color:var(--muted);background:var(--gray);border-radius:4px;padding:2px 6px;display:inline-block;margin-top:2px}
+.pa-card-price{font-size:16px;font-weight:700;color:var(--brand);margin-top:auto;padding-top:6px}
+.pa-old{font-size:12px;color:#9ca3af;text-decoration:line-through;margin-left:6px;font-weight:400}
+.pa-card-actions{display:flex;border-top:1px solid var(--border)}
+.pa-btn{flex:1;background:none;border:none;padding:10px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:4px}
+.pa-btn-edit:hover{background:#f0fdf4;color:#166534}
+.pa-btn-del{border-left:1px solid var(--border)}
+.pa-btn-del:hover{background:#fef2f2;color:#b91c1c}
+#products-admin-empty{text-align:center;padding:60px 20px;color:var(--muted);flex-direction:column;align-items:center;gap:12px;background:#fff;border-radius:var(--rl);border:1px solid var(--border)}
+.badge-hit{background:#fef3c7;color:#92400e}
+.badge-new{background:#d1fae5;color:#065f46}
+.badge-eco{background:#ccfbf1;color:#065f46}
+.badge-sale{background:#fee2e2;color:#991b1b}
+
+/* ── MODAL ─────────────────── */
+#product-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
+.modal-box{background:#fff;border-radius:16px;width:560px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.2)}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-header h2{font-size:16px;font-weight:600}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.modal-close:hover{background:var(--gray);color:#1a1a1a}
+.modal-body{padding:24px;display:flex;flex-direction:column;gap:16px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:#fff}
+
+/* Photo upload */
+.photo-upload-area{border:2px dashed var(--border);border-radius:var(--rl);overflow:hidden;background:var(--gray);cursor:pointer;transition:border-color .15s;position:relative;height:160px;display:flex;align-items:center;justify-content:center}
+.photo-upload-area:hover{border-color:var(--brand);background:var(--brand-bg)}
+#photo-preview{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:var(--rl)}
+#no-photo{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);pointer-events:none}
+#no-photo div{font-size:36px}
+#no-photo p{font-size:13px;font-weight:500}
+#no-photo span{font-size:11px}
+.photo-controls{display:flex;gap:8px;margin-top:6px}
+.photo-file-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--brand-bg);color:var(--brand-d);border:1.5px solid var(--brand);border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s}
+.photo-file-btn:hover{background:#f1d9dc}
+.photo-remove-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s}
+.photo-remove-btn:hover{background:#fee2e2}
+input[type=file]{display:none}
+
+/* Form fields */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field-group{display:flex;flex-direction:column;gap:5px}
+.field-group label{font-size:12px;font-weight:500;color:var(--muted)}
+.field-group input,.field-group select,.field-group textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s;background:#fff;color:#1a1a1a}
+.field-group input:focus,.field-group select:focus{border-color:var(--brand)}
+#modal-error{color:#b91c1c;font-size:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r);padding:8px 12px;display:none}
+
+/* ── STATS PAGE ─────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.recent-orders-card{background:#fff;border-radius:var(--rl);border:1px solid var(--border);overflow:hidden}
+.rec-card-title{padding:14px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--border);background:var(--gray)}
+.recent-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.recent-row:last-child{border-bottom:none}
+.recent-id{font-weight:600;color:var(--brand);min-width:80px}
+.recent-phone{flex:1;color:var(--muted)}
+.recent-total{font-weight:600;min-width:80px;text-align:right}
+.empty-state-sm{padding:20px;text-align:center;color:var(--muted);font-size:13px}
+
+/* ── TOAST ─────────────────── */
+.admin-toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:var(--rl);font-size:13px;font-weight:500;opacity:0;transition:opacity .3s,transform .3s;z-index:9999;transform:translateY(8px);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.admin-toast.show{opacity:1;transform:translateY(0)}
+.admin-toast-success{background:#166534;color:#fff}
+.admin-toast-info{background:#1e40af;color:#fff}
+
+/* ── SCROLLBAR ─────────────── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+</style>
 </head>
-<body class="admin-body">
+<body>
 
-<header class="admin-header">
-  <div class="logo">Upakovka<span>09</span> <span class="admin-badge">Админ</span></div>
-  <div class="admin-nav">
-    <span id="clock"></span>
-    <a href="index.html" target="_blank" class="alink">Открыть сайт ↗</a>
-    <button onclick="adminLogout()" class="alink">Выйти</button>
-  </div>
-</header>
-
-<!-- ЛОГИН -->
-<div id="login-screen" class="login-screen">
-  <div class="login-card">
-    <div style="font-size:48px;margin-bottom:12px">🔐</div>
-    <h2>Вход в панель</h2>
-    <p>Введите пароль администратора</p>
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Upakovka<span>09</span></div>
+    <div class="login-sub">Панель управления</div>
     <div class="field">
-      <input type="password" id="pw-input" placeholder="Пароль" onkeydown="if(event.key==='Enter')doLogin()"/>
-      <span class="ferr" id="pw-err">Неверный пароль</span>
+      <label>Пароль</label>
+      <input type="password" id="pw-input" placeholder="Введите пароль"/>
+      <div id="pw-err">Неверный пароль</div>
     </div>
-    <button class="btn-primary btn-block" onclick="doLogin()">Войти</button>
-    <p class="fnote">Пароль задаётся в js/admin.js строка 1</p>
+    <button class="btn-login" onclick="doLogin()">Войти →</button>
+    <div class="login-hint">Пароль по умолчанию: <code>admin123</code><br>Измените в файле js/admin.js</div>
   </div>
 </div>
 
-<!-- ПАНЕЛЬ -->
-<div id="admin-panel" style="display:none">
+<!-- APP -->
+<div id="admin-app" style="display:none">
 
-  <!-- ТАБЫ -->
-  <div class="admin-tabs">
-    <button class="atab active" onclick="showTab('orders',this)">📦 Заказы <span class="atab-badge" id="new-badge">0</span></button>
-    <button class="atab" onclick="showTab('products',this)">🏷️ Товары</button>
-  </div>
-
-  <!-- ЗАКАЗЫ -->
-  <div id="tab-orders" class="admin-section">
-    <div class="admin-toolbar">
-      <div class="toolbar-filters">
-        <button class="flt-btn active" onclick="filterOrders('all',this)">Все</button>
-        <button class="flt-btn" onclick="filterOrders('new',this)">Новые</button>
-        <button class="flt-btn" onclick="filterOrders('processing',this)">В обработке</button>
-        <button class="flt-btn" onclick="filterOrders('done',this)">Выполнены</button>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">Upakovka<span>09</span></div>
+      <div class="sidebar-logo-sub">Панель управления</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Главное</div>
+      <div class="sidebar-item active" data-tab="stats" onclick="showTab('stats',this)">
+        <span class="sidebar-item-icon">📊</span>
+        <span class="sidebar-item-label">Статистика</span>
       </div>
-      <button class="btn-danger-sm" onclick="clearAllOrders()">🗑 Очистить все</button>
+      <div class="sidebar-item" data-tab="orders" onclick="showTab('orders',this)">
+        <span class="sidebar-item-icon">📦</span>
+        <span class="sidebar-item-label">Заказы</span>
+        <span class="sidebar-item-badge" id="sidebar-new-count" style="display:none">0</span>
+      </div>
+      <div class="sidebar-section">Магазин</div>
+      <div class="sidebar-item" data-tab="products" onclick="showTab('products',this)">
+        <span class="sidebar-item-icon">🏷️</span>
+        <span class="sidebar-item-label">Товары</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-clock" id="admin-clock"></div>
+      <div class="sidebar-site-link" onclick="window.open('index.html','_blank')">
+        🌐 Открыть сайт ↗
+      </div>
+      <button class="sidebar-logout" onclick="adminLogout()">
+        🚪 Выйти
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-area">
+
+    <!-- ═══ STATS ═══ -->
+    <div id="tab-stats" class="tab-pane content-area" style="display:flex">
+      <div class="stat-cards">
+        <div class="stat-card"><div class="sc-icon">📦</div><div class="sc-label">Всего заказов</div><div class="sc-value" id="stat-orders">0</div></div>
+        <div class="stat-card"><div class="sc-icon">🆕</div><div class="sc-label">Новых заказов</div><div class="sc-value red" id="stat-new-orders">0</div></div>
+        <div class="stat-card"><div class="sc-icon">💰</div><div class="sc-label">Выручка (выполн.)</div><div class="sc-value green" id="stat-revenue">0 ₽</div></div>
+        <div class="stat-card"><div class="sc-icon">🏷️</div><div class="sc-label">Товаров в каталоге</div><div class="sc-value blue" id="stat-products">0</div></div>
+      </div>
+      <div class="recent-orders-card">
+        <div class="rec-card-title">Последние заказы</div>
+        <div id="recent-orders"></div>
+      </div>
     </div>
 
-    <div class="admin-stats" id="order-stats"></div>
-    <div id="orders-list"></div>
-    <div id="no-orders" class="empty-state" style="display:none">📭 Заказов пока нет</div>
-  </div>
+    <!-- ═══ ORDERS ═══ -->
+    <div id="tab-orders" class="tab-pane" style="display:none">
+      <div class="topbar">
+        <div class="topbar-title">Заказы</div>
+        <div class="topbar-actions">
+          <button class="btn btn-danger btn-sm" onclick="clearAllOrders()">🗑 Очистить все</button>
+        </div>
+      </div>
+      <div class="content-area" style="display:flex;flex-direction:column;gap:16px">
+        <div class="stat-cards">
+          <div class="stat-card"><div class="sc-label">Всего</div><div class="sc-value" id="os-total">0</div></div>
+          <div class="stat-card"><div class="sc-label">Новых</div><div class="sc-value red" id="os-new">0</div></div>
+          <div class="stat-card"><div class="sc-label">В обработке</div><div class="sc-value" id="os-proc">0</div></div>
+          <div class="stat-card"><div class="sc-label">Выполнено</div><div class="sc-value green" id="os-done">0</div></div>
+          <div class="stat-card"><div class="sc-label">Выручка (выполн.)</div><div class="sc-value green" id="os-revenue">0 ₽</div></div>
+        </div>
+        <div class="section-toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Поиск по номеру, телефону, ID..." oninput="searchOrders(this.value)"/>
+          </div>
+          <div class="filter-btns">
+            <button class="filter-btn orders-filter-btn active" onclick="filterOrders('all',this)">Все</button>
+            <button class="filter-btn orders-filter-btn" onclick="filterOrders('new',this)">🆕 Новые</button>
+            <button class="filter-btn orders-filter-btn" onclick="filterOrders('processing',this)">⏳ В обработке</button>
+            <button class="filter-btn orders-filter-btn" onclick="filterOrders('done',this)">✅ Выполнены</button>
+          </div>
+        </div>
+        <div class="orders-wrap">
+          <div id="orders-list" style="display:flex;flex-direction:column;gap:10px"></div>
+          <div id="orders-empty" style="display:none">
+            <div>📭</div>
+            <p>Заказов пока нет</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <!-- ТОВАРЫ -->
-  <div id="tab-products" class="admin-section" style="display:none">
-    <div class="admin-toolbar">
-      <h3 style="font-size:16px;font-weight:500">Управление товарами</h3>
-      <button class="btn-primary" onclick="openProductModal()">+ Добавить товар</button>
+    <!-- ═══ PRODUCTS ═══ -->
+    <div id="tab-products" class="tab-pane" style="display:none">
+      <div class="topbar">
+        <div class="topbar-title">Товары <span class="toolbar-count" id="prod-count" style="font-weight:400;font-size:13px;color:var(--muted);margin-left:6px"></span></div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openProductModal()">+ Добавить товар</button>
+        </div>
+      </div>
+      <div class="content-area" style="display:flex;flex-direction:column;gap:16px">
+        <div class="section-toolbar">
+          <div class="search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Поиск по названию..." oninput="searchProducts(this.value)"/>
+          </div>
+          <div class="filter-btns">
+            <button class="filter-btn prod-filter-btn active" onclick="filterProducts('all',this)">Все</button>
+            <button class="filter-btn prod-filter-btn" onclick="filterProducts('containers',this)">📦 Контейнеры</button>
+            <button class="filter-btn prod-filter-btn" onclick="filterProducts('cups',this)">☕ Стаканы</button>
+            <button class="filter-btn prod-filter-btn" onclick="filterProducts('bags',this)">🛍️ Пакеты</button>
+            <button class="filter-btn prod-filter-btn" onclick="filterProducts('plates',this)">🍽️ Тарелки</button>
+          </div>
+          <select class="select-ctrl" onchange="sortProducts(this.value)">
+            <option value="default">По умолчанию</option>
+            <option value="price_asc">Цена: дешевле</option>
+            <option value="price_desc">Цена: дороже</option>
+            <option value="name">По названию А–Я</option>
+          </select>
+        </div>
+        <div class="products-admin-grid" id="products-admin-grid"></div>
+        <div id="products-admin-empty" style="display:none">
+          <div style="font-size:48px">🔍</div>
+          <p>Товаров не найдено</p>
+        </div>
+      </div>
     </div>
-    <div id="products-admin-list"></div>
-  </div>
 
-</div>
+  </div><!-- /main-area -->
+</div><!-- /admin-app -->
 
-<!-- МОДАЛКА ТОВАРА -->
-<div id="modal-overlay" class="modal-overlay" onclick="closeModal()" style="display:none"></div>
-<div id="product-modal" class="product-modal" style="display:none">
-  <div class="modal-header">
-    <h2 id="modal-title">Добавить товар</h2>
-    <button onclick="closeModal()">✕</button>
-  </div>
-  <div class="modal-body">
-    <input type="hidden" id="m-id"/>
-    <div class="field"><label>Эмодзи (иконка)</label><input type="text" id="m-emoji" placeholder="📦"/></div>
-    <div class="field"><label>Название *</label><input type="text" id="m-name" placeholder="Контейнер 500мл"/></div>
-    <div class="field"><label>Описание</label><input type="text" id="m-meta" placeholder="Полипропилен PP, с крышкой"/></div>
-    <div class="twofields">
-      <div class="field"><label>Цена, ₽ *</label><input type="number" id="m-price" placeholder="4.90" step="0.01"/></div>
-      <div class="field"><label>Старая цена, ₽</label><input type="number" id="m-old-price" placeholder="6.50" step="0.01"/></div>
+<!-- PRODUCT MODAL -->
+<div id="product-modal">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 id="modal-title">Новый товар</h2>
+      <button class="modal-close" onclick="closeProductModal()">✕</button>
     </div>
-    <div class="field"><label>Категория</label>
-      <select id="m-cat">
-        <option value="containers">📦 Контейнеры</option>
-        <option value="cups">☕ Стаканы</option>
-        <option value="bags">🛍️ Пакеты</option>
-        <option value="plates">🍽️ Тарелки</option>
-      </select>
+    <div class="modal-body">
+      <div id="modal-error"></div>
+
+      <!-- ФОТО -->
+      <div class="field-group">
+        <label>Фото товара</label>
+        <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+          <img id="photo-preview" src="" alt="" style="display:none"/>
+          <div id="no-photo">
+            <div>📷</div>
+            <p>Нажмите чтобы загрузить</p>
+            <span>JPG, PNG до 2 МБ</span>
+          </div>
+        </div>
+        <div class="photo-controls">
+          <label class="photo-file-btn" for="photo-input">📂 Выбрать файл</label>
+          <button class="photo-remove-btn" type="button" onclick="removePhoto()">✕ Удалить фото</button>
+        </div>
+        <input type="file" id="photo-input" accept="image/*" onchange="handlePhotoUpload(this)"/>
+      </div>
+
+      <!-- ОСНОВНОЕ -->
+      <div class="form-row">
+        <div class="field-group">
+          <label>Эмодзи (если нет фото)</label>
+          <input type="text" id="m-emoji" placeholder="📦"/>
+        </div>
+        <div class="field-group">
+          <label>Категория</label>
+          <select id="m-cat">
+            <option value="containers">📦 Контейнеры</option>
+            <option value="cups">☕ Стаканы</option>
+            <option value="bags">🛍️ Пакеты</option>
+            <option value="plates">🍽️ Тарелки</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Название <span style="color:#c0392b">*</span></label>
+        <input type="text" id="m-name" placeholder="Контейнер пластиковый 500мл"/>
+      </div>
+
+      <div class="field-group">
+        <label>Описание / материал</label>
+        <input type="text" id="m-meta" placeholder="Полипропилен PP, крышка в комплекте"/>
+      </div>
+
+      <div class="form-row">
+        <div class="field-group">
+          <label>Цена, ₽ <span style="color:#c0392b">*</span></label>
+          <input type="number" id="m-price" placeholder="4.90" step="0.01" min="0"/>
+        </div>
+        <div class="field-group">
+          <label>Старая цена, ₽ (для скидки)</label>
+          <input type="number" id="m-oldprice" placeholder="6.50" step="0.01" min="0"/>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Значок</label>
+        <select id="m-badge">
+          <option value="">Нет</option>
+          <option value="hit">🔥 Хит продаж</option>
+          <option value="new">🆕 Новинка</option>
+          <option value="eco">🌿 Эко</option>
+          <option value="sale">💸 Скидка</option>
+        </select>
+      </div>
+
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding-top:4px">Характеристики</div>
+
+      <div class="form-row">
+        <div class="field-group">
+          <label>Материал</label>
+          <input type="text" id="m-material" placeholder="Полипропилен PP"/>
+        </div>
+        <div class="field-group">
+          <label>Объём</label>
+          <input type="text" id="m-volume" placeholder="500 мл"/>
+        </div>
+      </div>
+      <div class="field-group">
+        <label>Размер</label>
+        <input type="text" id="m-size" placeholder="18×13×5 см"/>
+      </div>
     </div>
-    <div class="field"><label>Значок</label>
-      <select id="m-badge">
-        <option value="">Нет</option>
-        <option value="hit">🔥 Хит продаж</option>
-        <option value="new">🆕 Новинка</option>
-        <option value="eco">🌿 Эко</option>
-        <option value="sale">💸 Скидка</option>
-      </select>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeProductModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveProduct()">💾 Сохранить</button>
     </div>
-    <div class="twofields">
-      <div class="field"><label>Материал</label><input type="text" id="m-material" placeholder="Полипропилен PP"/></div>
-      <div class="field"><label>Объём</label><input type="text" id="m-volume" placeholder="500 мл"/></div>
-    </div>
-    <div class="field"><label>Размер</label><input type="text" id="m-size" placeholder="18×13×5 см"/></div>
-  </div>
-  <div class="modal-footer">
-    <button class="btn-outline" onclick="closeModal()">Отмена</button>
-    <button class="btn-primary" onclick="saveProduct()">Сохранить</button>
   </div>
 </div>
 
