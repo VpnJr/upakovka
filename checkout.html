@@ -1,135 +1,203 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Оформление заказа — Upakovka09</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
 
-  <header class="header">
-    <a href="index.html" class="logo">Upakovka<span>09</span></a>
-    <a href="index.html" class="back-link">← Вернуться в каталог</a>
-  </header>
+<header class="header">
+  <a href="index.html" class="logo">Upakovka<span>09</span></a>
+  <a href="index.html" class="back-link">← Назад в каталог</a>
+</header>
 
-  <div class="checkout-page">
-    <div id="checkout-form-section">
-      <div class="checkout-layout">
+<div class="checkout-page">
 
-        <!-- ФОРМА -->
-        <div class="checkout-form-wrap">
-          <h1 class="page-title">Оформление заказа</h1>
+  <div id="form-section">
+    <div class="checkout-layout">
 
-          <div class="form-section">
-            <h2 class="form-section-title">📞 Контактные данные</h2>
-            <div class="field">
-              <label>Ваше имя</label>
-              <input type="text" id="f-name" placeholder="Как к вам обращаться?" />
-            </div>
-            <div class="field">
-              <label>Номер телефона <span class="required">*</span></label>
-              <div class="phone-wrap">
-                <span class="phone-prefix">+7</span>
-                <input type="tel" id="f-phone" placeholder="(999) 000-00-00" maxlength="15" oninput="formatPhone(this)" />
-              </div>
-              <span class="field-error" id="phone-error">Введите корректный номер телефона</span>
-              <span class="field-hint">Мы позвоним для подтверждения заказа</span>
-            </div>
+      <div class="checkout-left">
+        <h1 class="page-title">Оформление заказа</h1>
+
+        <div class="form-block">
+          <h2 class="form-subtitle">📞 Контактные данные</h2>
+          <div class="field">
+            <label>Ваше имя</label>
+            <input type="text" id="f-name" placeholder="Как к вам обращаться?"/>
           </div>
-
-          <div class="form-section">
-            <h2 class="form-section-title">🚚 Доставка</h2>
-            <div class="delivery-options">
-              <label class="delivery-opt">
-                <input type="radio" name="delivery" value="courier" checked onchange="updateDelivery()" />
-                <div class="delivery-info">
-                  <div class="delivery-name">Курьер</div>
-                  <div class="delivery-sub">1–2 рабочих дня</div>
-                </div>
-                <div class="delivery-price">300 ₽</div>
-              </label>
-              <label class="delivery-opt">
-                <input type="radio" name="delivery" value="pickup" onchange="updateDelivery()" />
-                <div class="delivery-info">
-                  <div class="delivery-name">Самовывоз</div>
-                  <div class="delivery-sub">Сегодня, 9:00–18:00</div>
-                </div>
-                <div class="delivery-price free">Бесплатно</div>
-              </label>
-              <label class="delivery-opt">
-                <input type="radio" name="delivery" value="cdek" onchange="updateDelivery()" />
-                <div class="delivery-info">
-                  <div class="delivery-name">СДЭК / Почта</div>
-                  <div class="delivery-sub">3–5 рабочих дней</div>
-                </div>
-                <div class="delivery-price">500 ₽</div>
-              </label>
+          <div class="field">
+            <label>Номер телефона <span class="req">*</span></label>
+            <div class="phone-wrap">
+              <span class="phone-prefix">+7</span>
+              <input type="tel" id="f-phone" placeholder="(999) 000-00-00" maxlength="15" oninput="fmtPhone(this)"/>
             </div>
-            <div class="field" id="address-field">
-              <label>Адрес доставки</label>
-              <input type="text" id="f-address" placeholder="Город, улица, дом, квартира" />
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h2 class="form-section-title">💳 Способ оплаты</h2>
-            <div class="pay-options">
-              <label class="pay-opt">
-                <input type="radio" name="payment" value="cash" checked />
-                <div class="pay-info">
-                  <div class="pay-name">💵 Наличными при получении</div>
-                </div>
-              </label>
-              <label class="pay-opt">
-                <input type="radio" name="payment" value="card" />
-                <div class="pay-info">
-                  <div class="pay-name">💳 Картой онлайн или при доставке</div>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <div class="field">
-              <label>Комментарий к заказу</label>
-              <textarea id="f-comment" rows="3" placeholder="Например: позвонить за час до доставки..."></textarea>
-            </div>
-          </div>
-
-          <button class="btn-primary btn-block btn-large" onclick="submitOrder()">
-            Отправить заказ →
-          </button>
-          <p class="form-note">Нажимая кнопку, вы соглашаетесь с условиями обработки персональных данных</p>
-        </div>
-
-        <!-- СВОДКА ЗАКАЗА -->
-        <div class="order-summary-wrap">
-          <div class="order-summary">
-            <h2 class="form-section-title">Ваш заказ</h2>
-            <div id="summary-items"></div>
-            <div class="summary-row"><span>Товары</span><span id="summary-goods">0 ₽</span></div>
-            <div class="summary-row"><span>Доставка</span><span id="summary-delivery">300 ₽</span></div>
-            <div class="summary-row total"><span>Итого</span><span id="summary-total">0 ₽</span></div>
+            <span class="ferr" id="phone-err">Введите корректный номер</span>
+            <span class="fhint">Позвоним для подтверждения заказа</span>
           </div>
         </div>
 
+        <div class="form-block">
+          <h2 class="form-subtitle">🚚 Доставка</h2>
+          <div class="radio-list">
+            <label class="radio-opt"><input type="radio" name="delivery" value="courier" checked onchange="updDelivery()"/><div class="ro-info"><b>Курьер</b><span>1–2 рабочих дня</span></div><div class="ro-price">300 ₽</div></label>
+            <label class="radio-opt"><input type="radio" name="delivery" value="pickup" onchange="updDelivery()"/><div class="ro-info"><b>Самовывоз</b><span>Сегодня, 9:00–18:00</span></div><div class="ro-price green">Бесплатно</div></label>
+            <label class="radio-opt"><input type="radio" name="delivery" value="cdek" onchange="updDelivery()"/><div class="ro-info"><b>СДЭК / Почта</b><span>3–5 рабочих дней</span></div><div class="ro-price">500 ₽</div></label>
+          </div>
+          <div class="field" id="addr-field">
+            <label>Адрес доставки</label>
+            <input type="text" id="f-addr" placeholder="Город, улица, дом, квартира"/>
+          </div>
+        </div>
+
+        <div class="form-block">
+          <h2 class="form-subtitle">💳 Оплата</h2>
+          <div class="radio-list">
+            <label class="radio-opt"><input type="radio" name="payment" value="cash" checked/><div class="ro-info"><b>💵 Наличными при получении</b></div></label>
+            <label class="radio-opt"><input type="radio" name="payment" value="card"/><div class="ro-info"><b>💳 Картой онлайн или при доставке</b></div></label>
+          </div>
+        </div>
+
+        <div class="form-block">
+          <div class="field">
+            <label>Комментарий</label>
+            <textarea id="f-comment" rows="2" placeholder="Позвонить за час, оставить у двери..."></textarea>
+          </div>
+        </div>
+
+        <button class="btn-primary btn-block btn-big" onclick="submitOrder()">Отправить заказ →</button>
+        <p class="fnote">Нажимая кнопку, вы соглашаетесь с обработкой персональных данных</p>
       </div>
-    </div>
 
-    <!-- ЭКРАН УСПЕХА -->
-    <div id="success-section" style="display:none" class="success-screen">
-      <div class="success-icon">✅</div>
-      <h2>Заказ принят!</h2>
-      <p id="success-message">Мы скоро с вами свяжемся.</p>
-      <div class="receipt" id="receipt"></div>
-      <a href="index.html" class="btn-primary">Вернуться в каталог →</a>
+      <div class="checkout-right">
+        <div class="order-summary">
+          <h2 class="form-subtitle">Ваш заказ</h2>
+          <div id="s-items"></div>
+          <div class="srow"><span>Товары</span><span id="s-goods">0 ₽</span></div>
+          <div class="srow"><span>Доставка</span><span id="s-delivery">300 ₽</span></div>
+          <div class="srow stotal"><span>Итого</span><span id="s-total">0 ₽</span></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <script src="js/products.js"></script>
-  <script src="js/cart.js"></script>
-  <script src="js/checkout.js"></script>
+  <div id="success-section" style="display:none" class="success-screen">
+    <div class="success-icon">✅</div>
+    <h2>Заказ принят!</h2>
+    <p id="success-msg"></p>
+    <div class="receipt" id="receipt"></div>
+    <a href="index.html" class="btn-primary">Вернуться в каталог →</a>
+  </div>
+
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script>
+  var deliveryCosts = {courier:300, pickup:0, cdek:500};
+  var deliveryLabels = {courier:'Курьер (1–2 дня)', pickup:'Самовывоз', cdek:'СДЭК / Почта (3–5 дней)'};
+
+  function getDelivery(){ return document.querySelector('input[name="delivery"]:checked').value; }
+  function getPayment(){ return document.querySelector('input[name="payment"]:checked').value; }
+
+  function updDelivery(){
+    var d = getDelivery();
+    var cost = deliveryCosts[d];
+    document.getElementById('addr-field').style.display = d==='pickup'?'none':'flex';
+    document.getElementById('s-delivery').textContent = cost===0?'Бесплатно':cost+' ₽';
+    document.getElementById('s-total').textContent = (getCartTotal()+cost).toFixed(2)+' ₽';
+  }
+
+  function fmtPhone(el){
+    var v = el.value.replace(/\D/g,'').slice(0,10);
+    var f='';
+    if(v.length>0) f='('+v.slice(0,3);
+    if(v.length>=3) f+=') '+v.slice(3,6);
+    if(v.length>=6) f+='-'+v.slice(6,8);
+    if(v.length>=8) f+='-'+v.slice(8,10);
+    el.value=f;
+  }
+
+  function renderSummary(){
+    var cart = getCart();
+    var products = getProducts();
+    var html = cart.map(function(item){
+      var p = products.find(function(x){ return x.id===item.id; });
+      if(!p) return '';
+      return '<div class="s-item">'+
+        '<div class="s-item-img">'+p.emoji+'</div>'+
+        '<div class="s-item-info"><div>'+p.name+'</div><div class="s-item-qty">'+item.qty+' шт. × '+p.price.toFixed(2)+' ₽</div></div>'+
+        '<div class="s-item-price">'+(p.price*item.qty).toFixed(2)+' ₽</div>'+
+      '</div>';
+    }).join('');
+    document.getElementById('s-items').innerHTML = html;
+    var goods = getCartTotal();
+    var dcost = deliveryCosts[getDelivery()];
+    document.getElementById('s-goods').textContent = goods.toFixed(2)+' ₽';
+    document.getElementById('s-total').textContent = (goods+dcost).toFixed(2)+' ₽';
+  }
+
+  function submitOrder(){
+    var raw = document.getElementById('f-phone').value.replace(/\D/g,'');
+    if(raw.length<10){
+      document.getElementById('f-phone').classList.add('error');
+      document.getElementById('phone-err').classList.add('show');
+      return;
+    }
+    document.getElementById('f-phone').classList.remove('error');
+    document.getElementById('phone-err').classList.remove('show');
+
+    var name = document.getElementById('f-name').value.trim()||'Покупатель';
+    var phone = '+7 '+document.getElementById('f-phone').value;
+    var addr = document.getElementById('f-addr').value.trim();
+    var comment = document.getElementById('f-comment').value.trim();
+    var delivery = getDelivery();
+    var payment = getPayment();
+    var payLabel = payment==='cash'?'Наличными':'Картой';
+    var dcost = deliveryCosts[delivery];
+    var cart = getCart();
+    var products = getProducts();
+    var goods = getCartTotal();
+    var total = (goods+dcost).toFixed(2);
+    var orderId = 'UP-'+Date.now().toString().slice(-5);
+
+    var order = {
+      id: orderId,
+      time: new Date().toLocaleString('ru-RU'),
+      name: name,
+      phone: phone,
+      address: addr,
+      comment: comment,
+      delivery: deliveryLabels[delivery],
+      payment: payLabel,
+      items: cart.map(function(item){
+        var p = products.find(function(x){ return x.id===item.id; });
+        return p ? {name:p.name, emoji:p.emoji, qty:item.qty, price:p.price} : null;
+      }).filter(Boolean),
+      total: total,
+      status: 'new'
+    };
+
+    var orders = JSON.parse(localStorage.getItem('upakovka_orders')||'[]');
+    orders.unshift(order);
+    localStorage.setItem('upakovka_orders', JSON.stringify(orders));
+    clearCart();
+
+    document.getElementById('form-section').style.display='none';
+    document.getElementById('success-section').style.display='block';
+    document.getElementById('success-msg').textContent='Мы позвоним на '+phone+' для подтверждения.';
+    document.getElementById('receipt').innerHTML=
+      '<div class="rrow"><span>Номер заказа</span><span>'+orderId+'</span></div>'+
+      '<div class="rrow"><span>Телефон</span><span>'+phone+'</span></div>'+
+      '<div class="rrow"><span>Доставка</span><span>'+deliveryLabels[delivery]+'</span></div>'+
+      '<div class="rrow"><span>Оплата</span><span>'+payLabel+'</span></div>'+
+      '<div class="rrow"><span>Сумма</span><span>'+total+' ₽</span></div>';
+  }
+
+  renderSummary();
+  updateCartBadge();
+</script>
 </body>
 </html>

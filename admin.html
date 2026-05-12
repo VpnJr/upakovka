@@ -1,75 +1,121 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Панель администратора — Upakovka09</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Админ-панель — Upakovka09</title>
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body class="admin-body">
 
-  <header class="admin-header">
-    <div class="logo">Upakovka<span>09</span> <span class="admin-badge">Админ</span></div>
-    <div class="admin-nav">
-      <span id="admin-clock"></span>
-      <a href="index.html" target="_blank" class="btn-outline-sm">Открыть сайт ↗</a>
-    </div>
-  </header>
+<header class="admin-header">
+  <div class="logo">Upakovka<span>09</span> <span class="admin-badge">Админ</span></div>
+  <div class="admin-nav">
+    <span id="clock"></span>
+    <a href="index.html" target="_blank" class="alink">Открыть сайт ↗</a>
+    <button onclick="adminLogout()" class="alink">Выйти</button>
+  </div>
+</header>
 
-  <!-- ЕСЛИ НЕ АВТОРИЗОВАН -->
-  <div id="login-screen" class="login-screen">
-    <div class="login-card">
-      <h2>Вход в панель</h2>
-      <p>Введите пароль администратора</p>
-      <div class="field">
-        <input type="password" id="admin-password" placeholder="Пароль" onkeydown="if(event.key==='Enter') adminLogin()" />
-        <span class="field-error" id="login-error">Неверный пароль</span>
-      </div>
-      <button class="btn-primary btn-block" onclick="adminLogin()">Войти</button>
-      <p class="form-note">Пароль задаётся в файле js/admin.js</p>
+<!-- ЛОГИН -->
+<div id="login-screen" class="login-screen">
+  <div class="login-card">
+    <div style="font-size:48px;margin-bottom:12px">🔐</div>
+    <h2>Вход в панель</h2>
+    <p>Введите пароль администратора</p>
+    <div class="field">
+      <input type="password" id="pw-input" placeholder="Пароль" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <span class="ferr" id="pw-err">Неверный пароль</span>
     </div>
+    <button class="btn-primary btn-block" onclick="doLogin()">Войти</button>
+    <p class="fnote">Пароль задаётся в js/admin.js строка 1</p>
+  </div>
+</div>
+
+<!-- ПАНЕЛЬ -->
+<div id="admin-panel" style="display:none">
+
+  <!-- ТАБЫ -->
+  <div class="admin-tabs">
+    <button class="atab active" onclick="showTab('orders',this)">📦 Заказы <span class="atab-badge" id="new-badge">0</span></button>
+    <button class="atab" onclick="showTab('products',this)">🏷️ Товары</button>
   </div>
 
-  <!-- ПАНЕЛЬ -->
-  <div id="admin-panel" style="display:none" class="admin-panel">
-
-    <div class="admin-stats">
-      <div class="stat-card">
-        <div class="stat-label">Всего заказов</div>
-        <div class="stat-value" id="stat-total">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Новых</div>
-        <div class="stat-value accent" id="stat-new">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">В обработке</div>
-        <div class="stat-value" id="stat-processing">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Выполнено</div>
-        <div class="stat-value green" id="stat-done">0</div>
-      </div>
-    </div>
-
+  <!-- ЗАКАЗЫ -->
+  <div id="tab-orders" class="admin-section">
     <div class="admin-toolbar">
-      <h2 class="admin-title">Заказы</h2>
-      <div class="toolbar-right">
-        <button class="btn-outline-sm" onclick="filterOrders('all')" id="filter-all">Все</button>
-        <button class="btn-outline-sm" onclick="filterOrders('new')" id="filter-new">Новые</button>
-        <button class="btn-outline-sm" onclick="filterOrders('processing')" id="filter-processing">В обработке</button>
-        <button class="btn-outline-sm" onclick="clearOrders()">🗑 Очистить всё</button>
+      <div class="toolbar-filters">
+        <button class="flt-btn active" onclick="filterOrders('all',this)">Все</button>
+        <button class="flt-btn" onclick="filterOrders('new',this)">Новые</button>
+        <button class="flt-btn" onclick="filterOrders('processing',this)">В обработке</button>
+        <button class="flt-btn" onclick="filterOrders('done',this)">Выполнены</button>
       </div>
+      <button class="btn-danger-sm" onclick="clearAllOrders()">🗑 Очистить все</button>
     </div>
 
-    <div id="orders-list" class="orders-list"></div>
-
-    <div id="no-orders" class="no-orders" style="display:none">
-      <p>Заказов пока нет</p>
-    </div>
+    <div class="admin-stats" id="order-stats"></div>
+    <div id="orders-list"></div>
+    <div id="no-orders" class="empty-state" style="display:none">📭 Заказов пока нет</div>
   </div>
 
-  <script src="js/admin.js"></script>
+  <!-- ТОВАРЫ -->
+  <div id="tab-products" class="admin-section" style="display:none">
+    <div class="admin-toolbar">
+      <h3 style="font-size:16px;font-weight:500">Управление товарами</h3>
+      <button class="btn-primary" onclick="openProductModal()">+ Добавить товар</button>
+    </div>
+    <div id="products-admin-list"></div>
+  </div>
+
+</div>
+
+<!-- МОДАЛКА ТОВАРА -->
+<div id="modal-overlay" class="modal-overlay" onclick="closeModal()" style="display:none"></div>
+<div id="product-modal" class="product-modal" style="display:none">
+  <div class="modal-header">
+    <h2 id="modal-title">Добавить товар</h2>
+    <button onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="m-id"/>
+    <div class="field"><label>Эмодзи (иконка)</label><input type="text" id="m-emoji" placeholder="📦"/></div>
+    <div class="field"><label>Название *</label><input type="text" id="m-name" placeholder="Контейнер 500мл"/></div>
+    <div class="field"><label>Описание</label><input type="text" id="m-meta" placeholder="Полипропилен PP, с крышкой"/></div>
+    <div class="twofields">
+      <div class="field"><label>Цена, ₽ *</label><input type="number" id="m-price" placeholder="4.90" step="0.01"/></div>
+      <div class="field"><label>Старая цена, ₽</label><input type="number" id="m-old-price" placeholder="6.50" step="0.01"/></div>
+    </div>
+    <div class="field"><label>Категория</label>
+      <select id="m-cat">
+        <option value="containers">📦 Контейнеры</option>
+        <option value="cups">☕ Стаканы</option>
+        <option value="bags">🛍️ Пакеты</option>
+        <option value="plates">🍽️ Тарелки</option>
+      </select>
+    </div>
+    <div class="field"><label>Значок</label>
+      <select id="m-badge">
+        <option value="">Нет</option>
+        <option value="hit">🔥 Хит продаж</option>
+        <option value="new">🆕 Новинка</option>
+        <option value="eco">🌿 Эко</option>
+        <option value="sale">💸 Скидка</option>
+      </select>
+    </div>
+    <div class="twofields">
+      <div class="field"><label>Материал</label><input type="text" id="m-material" placeholder="Полипропилен PP"/></div>
+      <div class="field"><label>Объём</label><input type="text" id="m-volume" placeholder="500 мл"/></div>
+    </div>
+    <div class="field"><label>Размер</label><input type="text" id="m-size" placeholder="18×13×5 см"/></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-outline" onclick="closeModal()">Отмена</button>
+    <button class="btn-primary" onclick="saveProduct()">Сохранить</button>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/admin.js"></script>
 </body>
 </html>
