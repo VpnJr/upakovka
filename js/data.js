@@ -1,4 +1,81 @@
-// ── КАТЕГОРИИ ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  FIREBASE CONFIG
+// ═══════════════════════════════════════════════════════
+var FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyC5WmllONH_dKc8z8kF-WXwbQ7nl1i42VM",
+  authDomain:        "upakovka09-c97d1.firebaseapp.com",
+  projectId:         "upakovka09-c97d1",
+  storageBucket:     "upakovka09-c97d1.firebasestorage.app",
+  messagingSenderId: "402891810707",
+  appId:             "1:402891810707:web:0980f659518bf4394f6a66"
+};
+
+// ImgBB для фото
+var IMGBB_KEY = '605aad32ee4f662d7c61875d4e055c66';
+
+// ═══════════════════════════════════════════════════════
+//  FIRESTORE REST API
+//  Используем REST напрямую — без SDK, работает везде
+// ═══════════════════════════════════════════════════════
+var FS_BASE = 'https://firestore.googleapis.com/v1/projects/' +
+              FIREBASE_CONFIG.projectId + '/databases/(default)/documents';
+
+// Получить все товары из Firestore
+function loadProductsFromFirebase(cb) {
+  fetch(FS_BASE + '/products/catalog')
+    .then(function(r) { return r.json(); })
+    .then(function(doc) {
+      if (doc && doc.fields && doc.fields.data) {
+        var json = doc.fields.data.stringValue;
+        var list = JSON.parse(json);
+        if (Array.isArray(list) && list.length) {
+          saveProducts(list); // кешируем локально
+          if (cb) cb(list);
+          return;
+        }
+      }
+      // Документа ещё нет — создадим дефолтные
+      saveProductsToFirebase(DEFAULT_PRODUCTS, function() {
+        saveProducts(DEFAULT_PRODUCTS);
+        if (cb) cb(DEFAULT_PRODUCTS);
+      });
+    })
+    .catch(function(e) {
+      console.warn('Firebase load error:', e);
+      if (cb) cb(getProducts());
+    });
+}
+
+// Сохранить товары в Firestore
+function saveProductsToFirebase(products, cb) {
+  var body = {
+    fields: {
+      data: { stringValue: JSON.stringify(products) }
+    }
+  };
+  fetch(FS_BASE + '/products/catalog?updateMask.fieldPaths=data', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (cb) cb(true);
+    })
+    .catch(function(e) {
+      console.error('Firebase save error:', e);
+      if (cb) cb(false);
+    });
+}
+
+// Алиас для обратной совместимости
+function loadProductsFromServer(cb) {
+  loadProductsFromFirebase(cb);
+}
+
+// ═══════════════════════════════════════════════════════
+//  КАТЕГОРИИ — localStorage
+// ═══════════════════════════════════════════════════════
 var DEFAULT_CATS = [
   {id:'containers',label:'Контейнеры',emoji:'📦',sub:[
     {id:'containers_plastic',label:'Пластиковые'},
@@ -32,11 +109,10 @@ function getCatLabel(cid,sid){
   return c.emoji+' '+c.label+(s?' › '+s.label:'');
 }
 
-// ── ТОВАРЫ ──────────────────────────────────────────────
-// Источник истины — products.json в репозитории.
-// localStorage используется только как кеш.
-// Поле photo = прямой URL (ImgBB), виден всем устройствам.
-var DEFAULT_PRODUCTS=[
+// ═══════════════════════════════════════════════════════
+//  ТОВАРЫ — localStorage как кеш, Firebase как источник
+// ═══════════════════════════════════════════════════════
+var DEFAULT_PRODUCTS = [
   {id:1,name:'Контейнер пластиковый 500мл',meta:'Полипропилен PP, крышка в комплекте',price:4.90,oldPrice:6.50,cat:'containers',subCat:'containers_plastic',badge:'hit',emoji:'📦',photo:'',material:'Полипропилен PP',volume:'500 мл',size:'18×13×5 см',packQty:50},
   {id:2,name:'Контейнер крафт 750мл',meta:'Крафт-картон, водостойкий',price:8.20,oldPrice:null,cat:'containers',subCat:'containers_paper',badge:'eco',emoji:'🟫',photo:'',material:'Крафт-картон',volume:'750 мл',size:'20×15×6 см',packQty:25},
   {id:3,name:'Контейнер фольга 1л',meta:'Алюминий, для духовки',price:12.00,oldPrice:null,cat:'containers',subCat:'containers_foil',badge:null,emoji:'🫙',photo:'',material:'Алюминий',volume:'1000 мл',size:'22×16×7 см',packQty:10},
@@ -52,32 +128,24 @@ function getProducts(){
   return JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
 }
 function saveProducts(l){localStorage.setItem('up_products',JSON.stringify(l));}
-function nextId(){var p=getProducts();return p.length?Math.max.apply(null,p.map(function(x){return x.id;}))+1:1;}
-
-// Получить URL фото товара
+function nextId(){
+  var p=getProducts();
+  return p.length?Math.max.apply(null,p.map(function(x){return x.id;}))+1:1;
+}
 function getPhoto(productId){
   var p=getProducts().find(function(x){return x.id===productId;});
   return(p&&p.photo)?p.photo:'';
 }
 
-// Загрузить свежие данные с products.json (обновляет кеш)
-function loadProductsFromServer(cb){
-  fetch('products.json?_='+Date.now())
-    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
-    .then(function(data){
-      if(Array.isArray(data)&&data.length){
-        saveProducts(data);
-        if(cb)cb(data);
-      }else{if(cb)cb(getProducts());}
-    })
-    .catch(function(){if(cb)cb(getProducts());});
-}
-
-// ── ЗАКАЗЫ ──────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  ЗАКАЗЫ — localStorage
+// ═══════════════════════════════════════════════════════
 function getOrders(){try{return JSON.parse(localStorage.getItem('up_orders')||'[]');}catch(e){return[];}}
 function saveOrders(l){localStorage.setItem('up_orders',JSON.stringify(l));}
 
-// ── СЖАТИЕ ФОТО ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  СЖАТИЕ ФОТО
+// ═══════════════════════════════════════════════════════
 function compressPhoto(dataUrl,cb){
   var img=new Image();
   img.onload=function(){
