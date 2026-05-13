@@ -137,7 +137,9 @@ function submitOrder(){
     }).filter(Boolean),
     total:total,status:'new'
   };
-  var orders=getOrders();orders.unshift(order);saveOrders(orders);
+  // Сохраняем заказ в Firebase (виден на всех устройствах)
+  order.createdAt = Date.now();
+  saveOrderToFirebase(order, null);
   clearCart();
   document.getElementById('form-sec').style.display='none';
   document.getElementById('ok-sec').style.display='block';

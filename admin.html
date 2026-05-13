@@ -220,6 +220,27 @@ input[type=file]{display:none}
 
 <div id="gstatus"></div>
 
+<!-- БАННЕР НОВОГО ЗАКАЗА -->
+<div id="order-banner" style="display:none;position:fixed;top:20px;right:20px;z-index:9999;background:#fff;border:2px solid var(--br);border-radius:16px;box-shadow:0 8px 32px rgba(123,30,46,.2);padding:16px 20px;min-width:280px;max-width:360px;animation:slidein .3s ease">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:42px;height:42px;background:var(--bbg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🛒</div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--brd);margin-bottom:2px">Новый заказ!</div>
+        <div style="font-size:13px;color:var(--mut)" id="banner-phone"></div>
+        <div style="font-size:15px;font-weight:700;color:var(--br)" id="banner-total"></div>
+      </div>
+    </div>
+    <button onclick="closeBanner()" style="background:none;border:none;cursor:pointer;color:var(--mut);font-size:18px;padding:0;line-height:1;flex-shrink:0">✕</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:12px">
+    <button onclick="showTab('orders');closeBanner();" style="flex:1;background:var(--br);color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Посмотреть заказ</button>
+  </div>
+</div>
+<style>
+@keyframes slidein{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
+
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="lbox">
@@ -479,8 +500,65 @@ if(sessionStorage.getItem('ua')==='1'){
 }
 function init(){
   tick(); setInterval(tick,10000);
-  loadProductsFromServer(function(){ if(document.getElementById('pane-products').style.display!=='none') renderProds(); });
+  // Запрашиваем разрешение на браузерные уведомления
+  if('Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+  // Загружаем данные из Firebase
+  loadProductsFromServer(function(){ renderProds(); });
+  loadCatsFromFirebase(function(){ renderCats(); });
+  // Слушаем новые заказы каждые 5 сек
+  startOrderPolling(function(order){
+    showNewOrderNotification(order);
+  });
   showTab('stats');
+}
+
+function showNewOrderNotification(order){
+  // Звук
+  playNotifSound();
+  // Браузерное уведомление
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification('🛒 Новый заказ!', {
+      body: order.phone + ' · ' + order.total + ' ₽',
+      icon: 'https://i.ibb.co/placeholder.png'
+    });
+  }
+  // Уведомление внутри страницы
+  showOrderBanner(order);
+  // Обновляем список заказов если открыт
+  if(adminState && adminState.tab === 'orders') renderOrders();
+  updateBadge();
+}
+
+function playNotifSound(){
+  try{
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  }catch(e){}
+}
+
+function showOrderBanner(order){
+  var banner = document.getElementById('order-banner');
+  if(!banner) return;
+  document.getElementById('banner-phone').textContent = order.phone;
+  document.getElementById('banner-total').textContent = order.total + ' ₽';
+  banner.style.display = 'flex';
+  clearTimeout(window._bannerTimer);
+  window._bannerTimer = setTimeout(function(){ closeBanner(); }, 10000);
+}
+
+function closeBanner(){
+  var b = document.getElementById('order-banner');
+  if(b) b.style.display = 'none';
 }
 function tick(){var e=document.getElementById('clock');if(e)e.textContent=new Date().toLocaleString('ru-RU',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}
 
@@ -499,7 +577,14 @@ function showTab(t){
   updateBadge();
 }
 function setFB(el,grp){document.querySelectorAll('[data-g="'+grp+'"]').forEach(function(b){b.classList.remove('on');});el.classList.add('on');}
-function updateBadge(){var n=getOrders().filter(function(o){return o.status==='new';}).length;var b=document.getElementById('sbadge');b.textContent=n;b.style.display=n?'flex':'none';}
+function updateBadge(){
+  var orders = window._cachedOrders || [];
+  var n = orders.filter(function(o){return o.status==='new';}).length;
+  var b = document.getElementById('sbadge');
+  b.textContent=n; b.style.display=n?'flex':'none';
+  // Обновляем счётчик на вкладке браузера
+  document.title = n ? '('+n+') Админ — Upakovka09' : 'Админ — Upakovka09';
+}
 function setText(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
 function setVal(id,v){var e=document.getElementById(id);if(e)e.value=v;}
 function getVal(id){var e=document.getElementById(id);return e?e.value:'';}
@@ -524,10 +609,24 @@ function gStatus(msg,type){
 //  СТАТИСТИКА
 // ════════════════════════════════════════════════════════
 function renderStats(){
-  var orders=getOrders(),prods=getProducts();
+  var prods=getProducts();
+  setText('s-prods',prods.length);
+  var orders = window._cachedOrders;
+  if(orders){
+    _renderStatsWithOrders(orders);
+  } else {
+    loadOrdersFromFirebase(function(all){
+      window._cachedOrders = all;
+      _renderStatsWithOrders(all);
+      updateBadge();
+    });
+  }
+}
+function _renderStatsWithOrders(orders){
   var rev=orders.filter(function(o){return o.status==='done';}).reduce(function(s,o){return s+parseFloat(o.total||0);},0);
-  setText('s-orders',orders.length); setText('s-new',orders.filter(function(o){return o.status==='new';}).length);
-  setText('s-rev',rev.toFixed(0)+' ₽'); setText('s-prods',prods.length);
+  setText('s-orders',orders.length);
+  setText('s-new',orders.filter(function(o){return o.status==='new';}).length);
+  setText('s-rev',rev.toFixed(0)+' ₽');
   var el=document.getElementById('recent-list');
   var list=orders.slice(0,5);
   if(!list.length){el.innerHTML='<div style="padding:16px;text-align:center;color:var(--mut);font-size:13px">Заказов пока нет</div>';return;}
@@ -540,16 +639,20 @@ function renderStats(){
 //  ЗАКАЗЫ
 // ════════════════════════════════════════════════════════
 function renderOrders(){
-  var all=getOrders(),list=all;
-  if(oFilter!=='all') list=list.filter(function(o){return o.status===oFilter;});
-  if(oSearch){var q=oSearch.toLowerCase();list=list.filter(function(o){return o.phone.indexOf(q)!==-1||(o.name||'').toLowerCase().indexOf(q)!==-1||o.id.toLowerCase().indexOf(q)!==-1;});}
-  var nc=all.filter(function(o){return o.status==='new';}).length;
-  var pc=all.filter(function(o){return o.status==='processing';}).length;
-  var dc=all.filter(function(o){return o.status==='done';}).length;
-  var rv=all.filter(function(o){return o.status==='done';}).reduce(function(s,o){return s+parseFloat(o.total||0);},0);
-  setText('os-all',all.length);setText('os-new',nc);setText('os-proc',pc);setText('os-done',dc);setText('os-rev',rv.toFixed(0)+' ₽');
   var el=document.getElementById('orders-wrap');
-  if(!list.length){el.innerHTML='<div class="empty">📭 Заказов нет</div>';updateBadge();return;}
+  el.innerHTML='<div class="empty" style="opacity:.5">⏳ Загружаем заказы…</div>';
+  loadOrdersFromFirebase(function(all){
+    // Кешируем для счётчика
+    window._cachedOrders = all;
+    var list=all;
+    if(oFilter!=='all') list=list.filter(function(o){return o.status===oFilter;});
+    if(oSearch){var q=oSearch.toLowerCase();list=list.filter(function(o){return (o.phone||'').indexOf(q)!==-1||(o.name||'').toLowerCase().indexOf(q)!==-1||(o.id||'').toLowerCase().indexOf(q)!==-1;});}
+    var nc=all.filter(function(o){return o.status==='new';}).length;
+    var pc=all.filter(function(o){return o.status==='processing';}).length;
+    var dc=all.filter(function(o){return o.status==='done';}).length;
+    var rv=all.filter(function(o){return o.status==='done';}).reduce(function(s,o){return s+parseFloat(o.total||0);},0);
+    setText('os-all',all.length);setText('os-new',nc);setText('os-proc',pc);setText('os-done',dc);setText('os-rev',rv.toFixed(0)+' ₽');
+    if(!list.length){el.innerHTML='<div class="empty">📭 Заказов нет</div>';updateBadge();return;}
   var scls={new:'sn',processing:'sp',done:'sd'};
   var slbl={new:'Новый',processing:'В обработке',done:'Выполнен'};
   el.innerHTML=list.map(function(o){
@@ -568,12 +671,24 @@ function renderOrders(){
         (o.status==='done'?'<span class="os-done">✓ Завершён</span>':'')+
         '<button class="ob ob-del" onclick="delOrder(\''+o.id+'\')">🗑</button>'+
       '</div></div></div>';
-  }).join('');
-  updateBadge();
+    }).join('');
+    updateBadge();
+  }); // end loadOrdersFromFirebase
 }
-function setOS(id,st){var os=getOrders(),o=os.find(function(x){return x.id===id;});if(o){o.status=st;saveOrders(os);renderOrders();}}
-function delOrder(id){if(!confirm('Удалить заказ #'+id+'?'))return;saveOrders(getOrders().filter(function(o){return o.id!==id;}));renderOrders();}
-function clearOrders(){if(!confirm('Удалить ВСЕ заказы?'))return;saveOrders([]);renderOrders();}
+function setOS(id,st){
+  updateOrderStatusInFirebase(id, st, function(){
+    renderOrders();
+    updateBadge();
+  });
+}
+function delOrder(id){
+  if(!confirm('Удалить заказ #'+id+'?')) return;
+  deleteOrderFromFirebase(id, function(){ renderOrders(); updateBadge(); });
+}
+function clearOrders(){
+  if(!confirm('Удалить ВСЕ заказы?')) return;
+  deleteAllOrdersFromFirebase(function(){ renderOrders(); updateBadge(); });
+}
 
 // ════════════════════════════════════════════════════════
 //  ТОВАРЫ
