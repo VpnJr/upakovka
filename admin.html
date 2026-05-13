@@ -350,12 +350,13 @@ input[type=file]{display:none}
         <label>Фото товара</label>
         <div class="pharea" onclick="document.getElementById('ph-file').click()">
           <img id="photo-preview" src="" alt="" style="display:none"/>
-          <div id="no-photo"><div class="ni">📷</div><p>Нажмите чтобы загрузить</p><span>JPG/PNG · сжимается до 640px</span></div>
+          <div id="no-photo"><div class="ni">📷</div><p>Нажмите чтобы загрузить</p><span>JPG/PNG · загружается на ImgBB</span></div>
         </div>
         <div class="phctrl">
-          <label class="ph-pick" for="ph-file">📂 Выбрать файл</label>
+          <label class="ph-pick" for="ph-file" id="ph-pick-lbl">📂 Выбрать файл</label>
           <button class="ph-del" type="button" onclick="removeProdPhoto()">✕ Удалить</button>
         </div>
+        <div id="ph-status" style="font-size:12px;color:var(--mut);margin-top:4px;display:none"></div>
         <input type="file" id="ph-file" accept="image/*" onchange="onPhotoFile(this)"/>
       </div>
       <div class="frow">
@@ -633,57 +634,140 @@ function buildSubSel(catId,selSub){
   }
 }
 
+// ══ IMGBB API KEY ════════════════════════════════════
+// Получите на https://imgbb.com → Account → API
+// После регистрации: https://api.imgbb.com/ → Add API key
+var IMGBB_KEY = '605aad32ee4f662d7c61875d4e055c66';
+// ═════════════════════════════════════════════════════
+
 function onPhotoFile(input){
-  var file=input.files[0];
+  var file = input.files[0];
   if(!file) return;
-  if(file.size>5*1024*1024){alert('Максимум 5 МБ');return;}
-  var reader=new FileReader();
-  reader.onload=function(e){
-    compressPhoto(e.target.result,function(c){
-      pendingPhoto=c;
-      var prev=document.getElementById('photo-preview');
-      var noph=document.getElementById('no-photo');
-      prev.src=c;prev.style.display='block';noph.style.display='none';
+  if(file.size > 10*1024*1024){ alert('Максимум 10 МБ'); return; }
+
+  // Показываем превью сразу (локально)
+  var reader = new FileReader();
+  reader.onload = function(e){
+    compressPhoto(e.target.result, function(compressed){
+      pendingPhoto = compressed; // временно храним локально
+      var prev = document.getElementById('photo-preview');
+      var noph = document.getElementById('no-photo');
+      prev.src = compressed;
+      prev.style.display = 'block';
+      noph.style.display = 'none';
+      setPhStatus('✓ Фото выбрано. Будет загружено при сохранении товара.', 'ok');
     });
   };
   reader.readAsDataURL(file);
 }
+
 function removeProdPhoto(){
-  pendingPhoto='__del__';
-  document.getElementById('photo-preview').style.display='none';
-  document.getElementById('no-photo').style.display='flex';
-  document.getElementById('ph-file').value='';
+  pendingPhoto = '__del__';
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('no-photo').style.display = 'flex';
+  document.getElementById('ph-file').value = '';
+  setPhStatus('', '');
+}
+
+function setPhStatus(msg, type){
+  var el = document.getElementById('ph-status');
+  if(!msg){ el.style.display='none'; return; }
+  el.textContent = msg;
+  el.style.color = type==='err' ? '#c0392b' : type==='ok' ? '#16a34a' : '#2563eb';
+  el.style.display = 'block';
+}
+
+function uploadToImgBB(base64data, callback){
+  if(IMGBB_KEY === 'ВАШ_КЛЮЧ_ЗДЕСЬ'){
+    // Ключ не задан — сохраняем локально как раньше
+    callback(null, base64data);
+    return;
+  }
+  // Убираем префикс data:image/...;base64,
+  var b64 = base64data.replace(/^data:image\/[a-z]+;base64,/, '');
+  setPhStatus('⏳ Загружаем фото на ImgBB...', 'blue');
+  var formData = new FormData();
+  formData.append('key', IMGBB_KEY);
+  formData.append('image', b64);
+  fetch('https://api.imgbb.com/1/upload', { method:'POST', body:formData })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.success){
+        var url = data.data.display_url; // прямая ссылка на изображение
+        setPhStatus('✓ Фото загружено на ImgBB', 'ok');
+        callback(null, url);
+      } else {
+        setPhStatus('Ошибка ImgBB: ' + (data.error && data.error.message || 'неизвестная'), 'err');
+        callback('ImgBB error', null);
+      }
+    })
+    .catch(function(err){
+      setPhStatus('Ошибка сети. Фото сохранено локально (только на этом устройстве).', 'err');
+      callback(null, base64data); // fallback — сохраняем локально
+    });
 }
 
 function saveProd(){
-  var name=getVal('m-name').trim();
-  var price=getVal('m-price');
-  if(!name){showErr('merr','Введите название');return;}
-  if(!price||isNaN(parseFloat(price))){showErr('merr','Введите цену');return;}
-  var prods=getProducts();
-  var prod={
-    id:editId||nextId(),
-    emoji:getVal('m-emoji')||'📦',
-    name:name,
-    meta:getVal('m-meta').trim(),
-    price:parseFloat(price),
-    oldPrice:getVal('m-oldprice')?parseFloat(getVal('m-oldprice')):null,
-    cat:getVal('m-cat'),
-    subCat:getVal('m-sub')||'',
-    badge:getVal('m-badge')||null,
-    packQty:parseInt(getVal('m-pack'))||50,
-    material:getVal('m-mat').trim()||'—',
-    volume:getVal('m-vol').trim()||'—',
-    size:getVal('m-size').trim()||'—',
-  };
-  if(editId){var idx=prods.findIndex(function(p){return p.id===editId;});if(idx>=0)prods[idx]=prod;else prods.push(prod);}
-  else prods.push(prod);
-  saveProducts(prods);
-  if(pendingPhoto==='__del__') deletePhoto(prod.id);
-  else if(pendingPhoto){try{localStorage.setItem('up_photo_'+prod.id,pendingPhoto);}catch(e){alert('Товар сохранён, но фото не уместилось (хранилище полно).');}}
-  closeProdModal();
-  renderProds();
-  showToast(editId?'Товар сохранён ✓':'Товар добавлен ✓','ok');
+  var name  = getVal('m-name').trim();
+  var price = getVal('m-price');
+  if(!name){ showErr('merr','Введите название'); return; }
+  if(!price||isNaN(parseFloat(price))){ showErr('merr','Введите цену'); return; }
+
+  // Блокируем кнопку пока идёт загрузка
+  var saveBtn = document.querySelector('#modal-prod .bp');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='Сохраняю...'; }
+
+  function doSave(photoUrl){
+    var prods = getProducts();
+    var prod = {
+      id:       editId || nextId(),
+      emoji:    getVal('m-emoji') || '📦',
+      name:     name,
+      meta:     getVal('m-meta').trim(),
+      price:    parseFloat(price),
+      oldPrice: getVal('m-oldprice') ? parseFloat(getVal('m-oldprice')) : null,
+      cat:      getVal('m-cat'),
+      subCat:   getVal('m-sub') || '',
+      badge:    getVal('m-badge') || null,
+      packQty:  parseInt(getVal('m-pack')) || 50,
+      material: getVal('m-mat').trim() || '—',
+      volume:   getVal('m-vol').trim() || '—',
+      size:     getVal('m-size').trim() || '—',
+      photo:    photoUrl || '',   // URL на ImgBB или пустая строка
+    };
+    if(editId){ var idx=prods.findIndex(function(p){return p.id===editId;}); if(idx>=0) prods[idx]=prod; else prods.push(prod); }
+    else prods.push(prod);
+    saveProducts(prods);
+
+    // Если URL — сохраняем в отдельный ключ для совместимости с getPhoto()
+    if(photoUrl && photoUrl.startsWith('http')){
+      localStorage.setItem('up_photo_'+prod.id, photoUrl);
+    } else if(pendingPhoto==='__del__'){
+      deletePhoto(prod.id);
+    } else if(photoUrl && !photoUrl.startsWith('http')){
+      // base64 fallback
+      try{ localStorage.setItem('up_photo_'+prod.id, photoUrl); }catch(e){}
+    }
+
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 Сохранить'; }
+    closeProdModal();
+    renderProds();
+    showToast(editId ? 'Товар сохранён ✓' : 'Товар добавлен ✓', 'ok');
+  }
+
+  if(pendingPhoto && pendingPhoto !== '__del__' && pendingPhoto.startsWith('data:')){
+    // Новое фото — загружаем на ImgBB
+    uploadToImgBB(pendingPhoto, function(err, url){
+      doSave(err ? '' : url);
+    });
+  } else if(pendingPhoto === '__del__'){
+    doSave('');
+  } else {
+    // Фото не менялось — берём текущее
+    var existing = editId ? getPhoto(editId) : '';
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 Сохранить'; }
+    doSave(existing);
+  }
 }
 function delProd(id){
   var p=getProducts().find(function(x){return x.id===id;});

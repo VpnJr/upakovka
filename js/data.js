@@ -66,23 +66,18 @@ function saveOrders(list){ localStorage.setItem('up_orders', JSON.stringify(list
 //  ФОТО хранятся отдельно от товаров — ключ up_photos:{id}
 //  Это решает проблему переполнения localStorage
 // ═══════════════════════════════════════════════════════
+// getPhoto — приоритет: поле photo в товаре (ImgBB URL) > localStorage (base64 fallback)
 function getPhoto(productId){
+  var prods = getProducts();
+  var p = prods.find(function(x){ return x.id === productId; });
+  if(p && p.photo) return p.photo;
   return localStorage.getItem('up_photo_' + productId) || '';
-}
-function savePhoto(productId, dataUrl, callback){
-  // Сжимаем перед сохранением (макс 600px, jpeg 0.72)
-  compressPhoto(dataUrl, function(compressed){
-    try{
-      localStorage.setItem('up_photo_' + productId, compressed);
-      if(callback) callback(true, compressed);
-    } catch(e){
-      alert('Не удалось сохранить фото: хранилище переполнено.\nПопробуйте удалить фото других товаров или уменьшить файл.');
-      if(callback) callback(false, '');
-    }
-  });
 }
 function deletePhoto(productId){
   localStorage.removeItem('up_photo_' + productId);
+  var prods = getProducts();
+  var p = prods.find(function(x){ return x.id === productId; });
+  if(p){ p.photo = ''; saveProducts(prods); }
 }
 
 function compressPhoto(dataUrl, callback){
