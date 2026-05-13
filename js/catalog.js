@@ -58,8 +58,9 @@ function renderCatalog(){
     var img = photo
       ? '<img src="'+photo+'" alt="'+p.name+'" loading="lazy">'
       : '<div class="card-emoji">'+p.emoji+'</div>';
-    var packInfo = p.packQty ? '<div class="product-pack">В пачке: <b>'+p.packQty+' шт.</b></div>' : '';
-    return '<div class="product-card" onclick="location.href=\'product.html?id='+p.id+'\'">'+
+    var pack = p.packQty || 1;
+    var packInfo = pack > 1 ? '<div class="product-pack">В пачке: <b>'+pack+' шт.</b></div>' : '';
+    return '<div class="product-card" onclick="location.href='product.html?id='+p.id+''">'+
       '<div class="product-img">'+img+
         (p.badge ? '<span class="product-badge '+BADGE_CLS[p.badge]+'">'+BADGE_LABEL[p.badge]+'</span>' : '')+
         (p.oldPrice ? '<span class="product-discount">−'+Math.round((1-p.price/p.oldPrice)*100)+'%</span>' : '')+
@@ -72,19 +73,56 @@ function renderCatalog(){
           '<div class="product-price">'+p.price.toFixed(2)+' ₽</div>'+
           (p.oldPrice ? '<div class="product-old">'+p.oldPrice.toFixed(2)+' ₽</div>' : '')+
         '</div>'+
-        '<button class="add-cart-btn" onclick="event.stopPropagation();quickAdd('+p.id+',this)">+ В корзину</button>'+
+        '<div class="card-cart-row" onclick="event.stopPropagation()">'+
+          '<div class="card-qty-ctrl">'+
+            '<button onclick="cardQty('+p.id+',-'+pack+')">−</button>'+
+            '<span id="cq-'+p.id+'">'+pack+'</span>'+
+            '<button onclick="cardQty('+p.id+','+pack+')">+</button>'+
+          '</div>'+
+          '<button class="add-cart-btn card-add-btn" id="ca-'+p.id+'" onclick="cardAdd('+p.id+')">В корзину</button>'+
+        '</div>'+
       '</div>'+
     '</div>';
   }).join('');
 }
 
+// Глобальное хранилище выбранных количеств на карточках
+window._cardQtys = {};
+
+function cardQty(id, delta){
+  var p = getProducts().find(function(x){ return x.id===id; });
+  var pack = (p && p.packQty) ? p.packQty : 1;
+  var current = window._cardQtys[id] || pack;
+  var next = Math.max(pack, current + delta);
+  window._cardQtys[id] = next;
+  var el = document.getElementById('cq-'+id);
+  if(el) el.textContent = next;
+}
+
+function cardAdd(id){
+  var p = getProducts().find(function(x){ return x.id===id; });
+  var pack = (p && p.packQty) ? p.packQty : 1;
+  var qty = window._cardQtys[id] || pack;
+  addToCart(id, qty);
+  // Сбросить счётчик обратно на pack
+  window._cardQtys[id] = pack;
+  var el = document.getElementById('cq-'+id);
+  if(el) el.textContent = pack;
+  // Анимация кнопки
+  var btn = document.getElementById('ca-'+id);
+  if(btn){
+    btn.textContent = '✓ Добавлено';
+    btn.classList.add('added');
+    setTimeout(function(){ btn.textContent = 'В корзину'; btn.classList.remove('added'); }, 1600);
+  }
+}
+
+// Устаревший quickAdd — оставлен для совместимости
 function quickAdd(id, btn){
-  var p = getProducts().find(function(x){ return x.id === id; });
+  var p = getProducts().find(function(x){ return x.id===id; });
   var qty = (p && p.packQty) ? p.packQty : 1;
   addToCart(id, qty);
-  btn.textContent = '✓ Добавлено';
-  btn.classList.add('added');
-  setTimeout(function(){ btn.textContent = '+ В корзину'; btn.classList.remove('added'); }, 1600);
+  if(btn){ btn.textContent='✓ Добавлено'; btn.classList.add('added'); setTimeout(function(){btn.textContent='+ В корзину';btn.classList.remove('added');},1600); }
 }
 
 // ── Фильтр-панель ─────────────────────────────────────────
