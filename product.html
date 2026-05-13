@@ -35,8 +35,10 @@
 <script>
 (function(){
   var id = parseInt(new URLSearchParams(location.search).get('id'));
-  var p  = getProducts().find(function(x){ return x.id === id; });
-  refreshCartUI();
+
+  function renderPage(){
+    var p = getProducts().find(function(x){ return x.id === id; });
+    refreshCartUI();
 
   if(!p){
     document.getElementById('pw').innerHTML='<div class="not-found"><h2>Товар не найден</h2><a href="index.html" class="btn-primary" style="margin-top:16px">← В каталог</a></div>';
@@ -231,6 +233,11 @@
   };
 
   applyQty(pack); // начальное состояние
+  } // end renderPage
+
+  // Сначала рендерим из кеша (быстро), потом обновляем с сервера
+  renderPage();
+  loadProductsFromServer(function(){ renderPage(); });
 })();
 </script>
 </body>

@@ -464,6 +464,8 @@ if(sessionStorage.getItem('ua')==='1'){
 }
 
 function init(){
+  // Загружаем свежие товары с GitHub Pages
+  loadProductsFromServer(function(){ renderProds(); });
   showTab('stats');
   setInterval(function(){var e=document.getElementById('clock');if(e)e.textContent=new Date().toLocaleString('ru-RU',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});},5000);
   document.getElementById('clock').textContent=new Date().toLocaleString('ru-RU',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
@@ -640,9 +642,75 @@ function buildSubSel(catId,selSub){
 }
 
 // ═══════════════════════════════════════════════════════
-// ImgBB API — фото загружаются туда и видны всем устройствам
+// НАСТРОЙКИ — заполните перед публикацией
 // ═══════════════════════════════════════════════════════
+
+// ImgBB — для хранения фото товаров (видны всем устройствам)
 var IMGBB_KEY = '605aad32ee4f662d7c61875d4e055c66';
+
+// GitHub — для сохранения товаров чтобы все видели изменения
+// 1. Создайте токен: github.com → Settings → Developer settings →
+//    Personal access tokens → Tokens (classic) → Generate new token
+//    Поставьте галочку: repo (или Contents: write)
+// 2. Вставьте ваши данные:
+var GH_TOKEN = 'ВАШ_GITHUB_TOKEN';   // например: ghp_abc123...
+var GH_REPO  = 'ВАШ_ЛОГИН/upakovka09'; // например: ivan/upakovka09
+var GH_BRANCH = 'main';                // ветка (обычно main или master)
+
+// ═══════════════════════════════════════════════════════
+// Сохранить список товаров в products.json на GitHub
+// Вызывается после каждого сохранения/удаления товара
+// ═══════════════════════════════════════════════════════
+function saveProductsToGitHub(products, onDone){
+  if(!GH_TOKEN || GH_TOKEN === 'ВАШ_GITHUB_TOKEN'){
+    // Токен не задан — только localStorage
+    if(onDone) onDone(false);
+    return;
+  }
+
+  var apiUrl = 'https://api.github.com/repos/' + GH_REPO +
+               '/contents/products.json?ref=' + GH_BRANCH;
+
+  // Сначала получаем SHA текущего файла (нужен для обновления)
+  fetch(apiUrl, {
+    headers: {
+      'Authorization': 'token ' + GH_TOKEN,
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(fileInfo){
+    var content = btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2))));
+    return fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + GH_TOKEN,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Обновление товаров через админку',
+        content: content,
+        sha: fileInfo.sha,
+        branch: GH_BRANCH
+      })
+    });
+  })
+  .then(function(r){
+    if(r.ok){
+      if(onDone) onDone(true);
+    } else {
+      return r.json().then(function(e){
+        console.error('GitHub API error:', e.message);
+        if(onDone) onDone(false);
+      });
+    }
+  })
+  .catch(function(err){
+    console.error('GitHub save error:', err);
+    if(onDone) onDone(false);
+  });
+}
 
 // Состояние фото в открытой модалке:
 //   ''        — фото не менялось
@@ -749,6 +817,10 @@ function saveProd(){
       prods.push(prod);
     }
     saveProducts(prods);
+    // Сохраняем на GitHub чтобы все устройства видели изменения
+    saveProductsToGitHub(prods, function(ok){
+      if(ok) console.log('products.json обновлён на GitHub');
+    });
     unlockBtn();
     closeProdModal();
     renderProds();
@@ -774,8 +846,11 @@ function saveProd(){
 function delProd(id){
   var p=getProducts().find(function(x){return x.id===id;});
   if(!p||!confirm('Удалить "'+p.name+'"?'))return;
-  saveProducts(getProducts().filter(function(x){return x.id!==id;}));
-  deletePhoto(id);
+  var updated=getProducts().filter(function(x){return x.id!==id;});
+  saveProducts(updated);
+  saveProductsToGitHub(updated, function(ok){
+    if(ok) console.log('products.json обновлён на GitHub');
+  });
   renderProds();
   showToast('Товар удалён','info');
 }

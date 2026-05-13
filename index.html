@@ -137,6 +137,11 @@
   buildFilterPanel();
   renderCatalog();
   refreshCartUI();
+  // Загружаем свежие товары с сервера (фото с ImgBB видны всем)
+  loadProductsFromServer(function(){
+    buildFilterPanel();
+    renderCatalog();
+  });
 </script>
 </body>
 </html>

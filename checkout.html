@@ -149,6 +149,7 @@ function submitOrder(){
     '<div class="rrow"><span>Оплата</span><span>'+payL+'</span></div>'+
     '<div class="rrow"><span>Сумма</span><span>'+total+' ₽</span></div>';
 }
+loadProductsFromServer(function(){ renderSummary(); });
 renderSummary();
 </script>
 </body>
