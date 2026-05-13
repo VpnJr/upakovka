@@ -63,6 +63,94 @@
   ];
 
   var photo = getPhoto(p.id);
+  // Все фото товара — только реальные, без заглушек
+  var allPhotos = (p.photos && p.photos.length) ? p.photos : (p.photo ? [p.photo] : []);
+  var mainPhoto = allPhotos[0] || '';
+
+  var mainImgHtml = mainPhoto
+    ? '<img src="'+mainPhoto+'" id="main-img-el" alt="'+p.name+'">'
+    : '<span id="main-img-el" style="font-size:110px;line-height:1">'+p.emoji+'</span>';
+
+  // Миниатюры — только если фото больше одного
+  var thumbsHtml = allPhotos.length > 1
+    ? '<div class="thumbs">'+
+        allPhotos.map(function(src,i){
+          return '<div class="thumb'+(i===0?' active':'')+'" onclick="setThumbSrc(this,''+src+'')"><img src="'+src+'" alt=""></div>';
+        }).join('')+
+      '</div>'
+    : '';
+
+  document.getElementById('pw').innerHTML =
+    '<div class="product-page-wrap">'+
+      '<div class="gallery">'+
+        '<div class="main-img" id="main-img">'+mainImgHtml+'</div>'+
+        thumbsHtml+
+      '</div>'+
+
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Товар — Upakovka09</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<header class="header">
+  <a href="index.html" class="logo">Upakovka<span>09</span></a>
+  <a href="index.html" class="back-link">← В каталог</a>
+  <div class="header-right">
+    <button class="cart-btn" onclick="openCart()">🛒 Корзина <span class="cart-count-badge cart-badge">0</span></button>
+  </div>
+</header>
+
+<div id="bc"></div>
+<div id="pw"></div>
+<div id="sw"></div>
+<div id="rw"></div>
+
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-drawer-header"><h2>Корзина <span class="cart-count-badge cart-badge">0</span></h2><button onclick="closeCart()">✕</button></div>
+  <div class="cart-drawer-body" id="cart-drawer-body"></div>
+  <div class="cart-drawer-footer" id="cart-drawer-footer" style="display:none">
+    <div class="cart-drawer-total">Итого: <strong id="cart-total-val">0 ₽</strong></div>
+    <a href="checkout.html" class="btn-primary btn-block">Оформить заказ →</a>
+  </div>
+</div>
+<div id="cart-toast" class="cart-toast">✓ Товар добавлен в корзину</div>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script>
+(function(){
+  var id = parseInt(new URLSearchParams(location.search).get('id'));
+
+  function renderPage(){
+    var p = getProducts().find(function(x){ return x.id === id; });
+    refreshCartUI();
+
+  if(!p){
+    document.getElementById('pw').innerHTML='<div class="not-found"><h2>Товар не найден</h2><a href="index.html" class="btn-primary" style="margin-top:16px">← В каталог</a></div>';
+    return;
+  }
+  document.title = p.name + ' — Upakovka09';
+
+  var pack = p.packQty || 50;  // шаг количества = в пачке
+  var BLAB = {hit:'Хит продаж',new:'Новинка',eco:'Эко',sale:'Скидка'};
+  var BCLS = {hit:'badge-hit',new:'badge-new',eco:'badge-eco',sale:'badge-sale'};
+
+  // breadcrumb
+  var catLabel = getCatLabel(p.cat, p.subCat);
+  document.getElementById('bc').innerHTML =
+    '<div class="breadcrumb"><a href="index.html">Главная</a> › <a href="index.html#catalog">'+catLabel+'</a> › '+p.name+'</div>';
+
+  var discounts=[
+    {label:'1–'+( pack-1)+' шт',  mult:1.33},
+    {label:pack+'–'+(pack*10-1)+' шт', mult:1},
+    {label:pack*10+'–'+(pack*20-1)+' шт', mult:0.76},
+    {label:'от '+(pack*20)+' шт', mult:0.59}
+  ];
+
+  var photo = getPhoto(p.id);
   var mainImgHtml = photo
     ? '<img src="'+photo+'" id="main-img-el" alt="'+p.name+'">'
     : '<span id="main-img-el" style="font-size:110px;line-height:1">'+p.emoji+'</span>';
@@ -76,8 +164,7 @@
             (photo?'<img src="'+photo+'" alt="">':p.emoji)+
           '</div>'+
           '<div class="thumb" onclick="setThumb(this,\'\',\'📷\')">📷</div>'+
-          '<div class="thumb" onclick="setThumb(this,\'\',\'📐\')">📐</div>'+
-        '</div>'+
+          '</div>'+
       '</div>'+
 
       '<div class="pinfo">'+
@@ -137,7 +224,8 @@
         '</div>'+
         '<div class="pfeatures"><span>🚚 Доставка 1–2 дня</span><span>📄 Счёт для юрлиц</span><span>↩️ Возврат 14 дней</span></div>'+
       '</div>'+
-    '</div>';
+    '</div>'+
+  '</div>';
 
   document.getElementById('sw').innerHTML =
     '<div class="specs-section">'+
@@ -179,13 +267,10 @@
   // ── логика счётчика ──────────────────────────────
   var qty = pack;
 
-  window.setThumb = function(el, src, emoji){
+  window.setThumbSrc = function(el, src){
     document.querySelectorAll('.thumb').forEach(function(t){t.classList.remove('active');});
     el.classList.add('active');
-    var mi = document.getElementById('main-img');
-    var decoded = decodeURIComponent(src);
-    if(decoded){ mi.innerHTML='<img src="'+decoded+'" alt="">'; }
-    else { mi.innerHTML='<span style="font-size:110px;line-height:1">'+emoji+'</span>'; }
+    document.getElementById('main-img').innerHTML='<img src="'+src+'" alt="">';
   };
 
   function getDiscount(q){
