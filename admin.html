@@ -217,6 +217,9 @@ input[type=file]{display:none}
 <!-- ═══ APP ═══ -->
 <div id="app">
 
+  <!-- статус-бар вверху -->
+  <div id="global-status" style="display:none;position:fixed;top:0;left:0;right:0;z-index:2000;padding:10px 20px;font-size:13px;font-weight:500;color:#fff;text-align:center"></div>
+
   <!-- SIDEBAR -->
   <aside class="sb">
     <div class="sb-logo">
@@ -298,7 +301,10 @@ input[type=file]{display:none}
     <div id="pane-products" class="pane flex">
       <div class="topbar">
         <div class="topbar-t">Товары &nbsp;<span style="font-weight:400;font-size:13px;color:var(--mut)" id="p-count"></span></div>
-        <div class="topbar-a"><button class="btn bp" onclick="openProdModal(0)">+ Добавить товар</button></div>
+        <div class="topbar-a">
+          <button class="btn bo bsm" onclick="offerManualDownload(getProducts())" title="Скачать products.json и загрузить в репозиторий">📥 Скачать products.json</button>
+          <button class="btn bp" onclick="openProdModal(0)">+ Добавить товар</button>
+        </div>
       </div>
       <div class="scroll">
         <div class="stb">
@@ -594,7 +600,7 @@ function renderProds(){
 
 // ── product modal ──────────────────────────────────
 function openProdModal(id){
-  editId=id||null; pendingPhotoB64='';
+  editId=id||null; pendingPhotoB64=''; setPhStatus('','');
   var p=id?getProducts().find(function(x){return x.id===id;}):null;
   document.getElementById('mprod-title').textContent=p?'Редактировать товар':'Новый товар';
   setVal('m-emoji',p?p.emoji:'📦');
@@ -641,46 +647,64 @@ function buildSubSel(catId,selSub){
   }
 }
 
-// ═══════════════════════════════════════════════════════
-// НАСТРОЙКИ — заполните перед публикацией
-// ═══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+//  НАСТРОЙКИ
+// ════════════════════════════════════════════════════
 
-// ImgBB — для хранения фото товаров (видны всем устройствам)
+// ImgBB — загрузка фото (видны всем устройствам)
 var IMGBB_KEY = '605aad32ee4f662d7c61875d4e055c66';
 
-// GitHub — для сохранения товаров чтобы все видели изменения
-// 1. Создайте токен: github.com → Settings → Developer settings →
-//    Personal access tokens → Tokens (classic) → Generate new token
-//    Поставьте галочку: repo (или Contents: write)
-// 2. Вставьте ваши данные:
-var GH_TOKEN = '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';   // например: ghp_abc123...
-var GH_REPO  = 'VpnJr/upakovka09'; // например: ivan/upakovka09
-var GH_BRANCH = 'main';                // ветка (обычно main или master)
+// GitHub — автосохранение products.json
+// Токен: github.com → Settings → Developer settings →
+//        Personal access tokens (classic) → repo
+var GH_TOKEN  = '';              // ← вставьте токен сюда, например: ghp_xxxx
+var GH_REPO   = 'VpnJr/upakovka09';
+var GH_BRANCH = 'main';
 
-// ═══════════════════════════════════════════════════════
-// Сохранить список товаров в products.json на GitHub
-// Вызывается после каждого сохранения/удаления товара
-// ═══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+//  СТАТУС-БАР — показывает что происходит
+// ════════════════════════════════════════════════════
+function showGlobalStatus(msg, type){
+  var el = document.getElementById('global-status');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.background = type==='ok' ? '#166534' : type==='err' ? '#991b1b' : '#1e40af';
+  el.style.display = msg ? 'block' : 'none';
+  if(type==='ok') setTimeout(function(){ el.style.display='none'; }, 4000);
+}
+
+// ════════════════════════════════════════════════════
+//  СОХРАНЕНИЕ НА GITHUB
+// ════════════════════════════════════════════════════
 function saveProductsToGitHub(products, onDone){
-  if(!GH_TOKEN || GH_TOKEN === 'ВАШ_GITHUB_TOKEN'){
-    // Токен не задан — только localStorage
+  if(!GH_TOKEN || !GH_TOKEN.trim()){
+    // Токен не вставлен — предлагаем скачать вручную
+    offerManualDownload(products);
     if(onDone) onDone(false);
     return;
   }
 
-  var apiUrl = 'https://api.github.com/repos/' + GH_REPO +
-               '/contents/products.json?ref=' + GH_BRANCH;
+  showGlobalStatus('⏳ Сохраняем товары на GitHub…', 'loading');
 
-  // Сначала получаем SHA текущего файла (нужен для обновления)
-  fetch(apiUrl, {
+  var apiUrl = 'https://api.github.com/repos/' + GH_REPO +
+               '/contents/products.json';
+
+  // Шаг 1: получаем SHA файла
+  fetch(apiUrl + '?ref=' + GH_BRANCH, {
     headers: {
       'Authorization': 'token ' + GH_TOKEN,
       'Accept': 'application/vnd.github.v3+json'
     }
   })
-  .then(function(r){ return r.json(); })
+  .then(function(r){
+    if(!r.ok) throw new Error('get-sha:' + r.status);
+    return r.json();
+  })
   .then(function(fileInfo){
-    var content = btoa(unescape(encodeURIComponent(JSON.stringify(products, null, 2))));
+    // Шаг 2: обновляем файл
+    var b64content = btoa(unescape(encodeURIComponent(
+      JSON.stringify(products, null, 2)
+    )));
     return fetch(apiUrl, {
       method: 'PUT',
       headers: {
@@ -689,8 +713,8 @@ function saveProductsToGitHub(products, onDone){
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        message: 'Обновление товаров через админку',
-        content: content,
+        message: 'update products via admin panel',
+        content: b64content,
         sha: fileInfo.sha,
         branch: GH_BRANCH
       })
@@ -698,51 +722,69 @@ function saveProductsToGitHub(products, onDone){
   })
   .then(function(r){
     if(r.ok){
+      showGlobalStatus('✓ products.json обновлён на GitHub — фото видны всем!', 'ok');
       if(onDone) onDone(true);
     } else {
       return r.json().then(function(e){
-        console.error('GitHub API error:', e.message);
-        if(onDone) onDone(false);
+        throw new Error(e.message || r.status);
       });
     }
   })
   .catch(function(err){
-    console.error('GitHub save error:', err);
+    showGlobalStatus('⚠ GitHub: ' + err.message + '. Скачайте файл вручную.', 'err');
+    offerManualDownload(products);
     if(onDone) onDone(false);
   });
 }
 
-// Состояние фото в открытой модалке:
-//   ''        — фото не менялось
-//   '__del__' — пользователь удалил фото
-//   иначе     — base64 нового фото (до загрузки на ImgBB)
-var pendingPhotoB64 = '';
+// Предлагает скачать products.json вручную
+function offerManualDownload(products){
+  var json = JSON.stringify(products, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'products.json';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showGlobalStatus('📥 Скачан products.json — загрузите его в корень репозитория на GitHub', 'loading');
+}
+
+// ════════════════════════════════════════════════════
+//  ФОТО — ImgBB
+// ════════════════════════════════════════════════════
+var pendingPhotoB64 = '';   // base64 нового фото | '__del__' | ''
 
 function setPhStatus(msg, type){
   var el = document.getElementById('ph-status');
-  if(!msg){ el.style.cssText = 'display:none'; return; }
-  var colors = { ok:'#16a34a', err:'#c0392b', loading:'#2563eb' };
-  el.style.cssText = 'font-size:12px;margin-top:6px;padding:6px 10px;border-radius:6px;display:block;' +
-    'background:' + (type==='err' ? '#fef2f2' : type==='ok' ? '#f0fdf4' : '#eff6ff') + ';' +
-    'color:' + (colors[type] || '#374151');
+  if(!el) return;
+  if(!msg){ el.style.display='none'; return; }
+  var bg    = {ok:'#f0fdf4', err:'#fef2f2', loading:'#eff6ff'}[type] || '#f8f9fa';
+  var color = {ok:'#166534', err:'#991b1b', loading:'#1e40af'}[type] || '#374151';
+  el.style.cssText = 'display:block;font-size:12px;margin-top:6px;padding:7px 10px;' +
+                     'border-radius:6px;background:'+bg+';color:'+color;
   el.textContent = msg;
 }
 
 function onPhotoFile(input){
   var file = input.files[0];
   if(!file) return;
-
-  // Превью сразу — до загрузки
+  setPhStatus('⏳ Читаем файл…', 'loading');
   var reader = new FileReader();
   reader.onload = function(e){
     compressPhoto(e.target.result, function(compressed){
       pendingPhotoB64 = compressed;
-      document.getElementById('photo-preview').src = compressed;
-      document.getElementById('photo-preview').style.display = 'block';
+      var prev = document.getElementById('photo-preview');
+      prev.src = compressed;
+      prev.style.display = 'block';
       document.getElementById('no-photo').style.display = 'none';
-      setPhStatus('Фото выбрано. Будет загружено на ImgBB при сохранении товара.', 'ok');
+      setPhStatus('✓ Фото готово — нажмите «Сохранить» для загрузки на ImgBB', 'ok');
     });
   };
+  reader.onerror = function(){ setPhStatus('Ошибка чтения файла', 'err'); };
   reader.readAsDataURL(file);
 }
 
@@ -751,46 +793,45 @@ function removeProdPhoto(){
   document.getElementById('photo-preview').style.display = 'none';
   document.getElementById('no-photo').style.display = 'flex';
   document.getElementById('ph-file').value = '';
-  setPhStatus('Фото будет удалено при сохранении.', 'err');
+  setPhStatus('Фото будет удалено при сохранении', 'err');
 }
 
 function uploadToImgBB(base64data, onDone){
-  // Убираем data:image/...;base64, — ImgBB принимает только чистый base64
+  setPhStatus('⏳ Загружаем фото на ImgBB…', 'loading');
+  // Убираем префикс data:image/...;base64,
   var b64 = base64data.replace(/^data:[^;]+;base64,/, '');
   var form = new FormData();
   form.append('key', IMGBB_KEY);
   form.append('image', b64);
 
-  setPhStatus('⏳ Загружаем фото на ImgBB…', 'loading');
-
   fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: form })
     .then(function(r){ return r.json(); })
     .then(function(data){
       if(data && data.success){
-        setPhStatus('✓ Фото успешно загружено на ImgBB', 'ok');
-        onDone(data.data.display_url); // прямая https-ссылка
+        var url = data.data.display_url;
+        setPhStatus('✓ Фото загружено на ImgBB: ' + url, 'ok');
+        onDone(url);
       } else {
-        var msg = (data && data.error && data.error.message) || 'неизвестная ошибка';
+        var msg = (data && data.error && data.error.message) || JSON.stringify(data);
         setPhStatus('Ошибка ImgBB: ' + msg, 'err');
-        onDone(''); // не сохраняем сломанное фото
+        onDone('');
       }
     })
     .catch(function(err){
-      setPhStatus('Ошибка сети при загрузке фото: ' + err.message, 'err');
+      setPhStatus('Сеть: ' + err.message, 'err');
       onDone('');
     });
 }
 
 function saveProd(){
   var name  = getVal('m-name').trim();
-  var price = getVal('m-price');
+  var price = getVal('m-price').trim();
   if(!name){  showErr('merr', 'Введите название'); return; }
   if(!price || isNaN(parseFloat(price))){ showErr('merr', 'Введите цену'); return; }
 
-  // Блокируем кнопку на время загрузки
   var btn = document.querySelector('#modal-prod .mftr .bp');
-  function lockBtn(){ if(btn){ btn.disabled=true; btn.textContent='Сохраняю…'; } }
-  function unlockBtn(){ if(btn){ btn.disabled=false; btn.textContent='💾 Сохранить'; } }
+  function lock(){   if(btn){ btn.disabled=true;  btn.textContent='Сохраняю…'; }}
+  function unlock(){ if(btn){ btn.disabled=false; btn.textContent='💾 Сохранить'; }}
 
   function finalize(photoUrl){
     var prods = getProducts();
@@ -808,7 +849,7 @@ function saveProd(){
       material: getVal('m-mat').trim() || '—',
       volume:   getVal('m-vol').trim() || '—',
       size:     getVal('m-size').trim() || '—',
-      photo:    photoUrl,
+      photo:    photoUrl || '',
     };
     if(editId){
       var idx = prods.findIndex(function(p){ return p.id === editId; });
@@ -817,29 +858,22 @@ function saveProd(){
       prods.push(prod);
     }
     saveProducts(prods);
-    // Сохраняем на GitHub чтобы все устройства видели изменения
-    saveProductsToGitHub(prods, function(ok){
-      if(ok) console.log('products.json обновлён на GitHub');
-    });
-    unlockBtn();
+    saveProductsToGitHub(prods, null);
+    unlock();
     closeProdModal();
     renderProds();
     showToast(editId ? 'Товар сохранён ✓' : 'Товар добавлен ✓', 'ok');
   }
 
   if(pendingPhotoB64 && pendingPhotoB64 !== '__del__'){
-    // Есть новое фото — загружаем на ImgBB
-    lockBtn();
+    lock();
     uploadToImgBB(pendingPhotoB64, function(url){
       finalize(url);
     });
   } else if(pendingPhotoB64 === '__del__'){
-    // Фото удалено
     finalize('');
   } else {
-    // Фото не менялось — берём существующий URL
-    var existing = editId ? getPhoto(editId) : '';
-    finalize(existing);
+    finalize(editId ? getPhoto(editId) : '');
   }
 }
 
