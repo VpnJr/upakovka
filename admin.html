@@ -316,8 +316,13 @@ input[type=file]{display:none}
 
     <!-- ══ КАТЕГОРИИ ══ -->
     <div id="tab-categories" class="tab-pane" style="display:flex;flex-direction:column;overflow:hidden;height:100%">
-      <div class="topbar"><div class="topbar-title">Категории и подкатегории</div><div class="topbar-actions"><button class="btn btn-p" onclick="addMainCat()">+ Добавить категорию</button></div></div>
-      <div class="content">
+      <div class="topbar" style="flex-shrink:0">
+        <div class="topbar-title">Категории и подкатегории</div>
+        <div class="topbar-actions">
+          <button class="btn btn-p" onclick="addMainCat()" type="button">+ Добавить категорию</button>
+        </div>
+      </div>
+      <div class="content" style="flex:1;overflow-y:auto">
         <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:var(--r);padding:12px 16px;font-size:13px;color:#856404">
           ⚠️ <strong>Важно:</strong> ID категории нельзя изменить после создания — он связан с товарами. Редактировать можно только название и эмодзи.
         </div>
@@ -399,7 +404,7 @@ input[type=file]{display:none}
     </div>
     <div class="modal-ftr"><button class="btn btn-o" onclick="closeCatModal()">Отмена</button><button class="btn btn-p" onclick="saveCatModal()">💾 Сохранить</button></div>
   </div>
-</div>
+
 
 <script src="js/data.js"></script>
 <script src="js/cart.js"></script>
