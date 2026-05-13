@@ -1,218 +1,216 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Админ — Upakovka09</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f0f2f5;color:#1a1a1a;font-size:14px;line-height:1.5}
-:root{--brand:#7B1E2E;--brand-l:#9B2535;--brand-d:#5A1220;--brand-bg:#F9EDEF;--sidebar-w:240px;--r:8px;--rl:12px;--border:#e2e5e9;--muted:#6b7280;--gray:#f8f9fa}
+:root{--br:#7B1E2E;--brl:#9B2535;--brd:#5A1220;--bbg:#F9EDEF;--sw:230px;--r:8px;--rl:12px;--bor:#e2e5e9;--mut:#6b7280;--gr:#f8f9fa}
 
-/* ── LOGIN ─────────────────── */
-#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--brand-d) 0%,var(--brand) 100%);display:flex;align-items:center;justify-content:center;z-index:1000}
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--brd),var(--br));display:flex;align-items:center;justify-content:center;z-index:1000}
 .login-box{background:#fff;border-radius:16px;padding:40px;width:380px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.25)}
-.login-logo{font-size:28px;font-weight:600;color:var(--brand);margin-bottom:4px}
-.login-logo span{opacity:.5;font-weight:400}
-.login-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
-.login-box .field{text-align:left;margin-bottom:16px}
-.login-box label{font-size:12px;color:var(--muted);font-weight:500;display:block;margin-bottom:5px}
-.login-box input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;outline:none;transition:border-color .15s;font-family:inherit}
-.login-box input:focus{border-color:var(--brand)}
-.login-box input.shake{animation:shake .4s}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.login-logo{font-size:28px;font-weight:700;color:var(--br);margin-bottom:4px}
+.login-logo span{opacity:.45;font-weight:400}
+.login-sub{font-size:13px;color:var(--mut);margin-bottom:28px}
+.lfield{text-align:left;margin-bottom:16px}
+.lfield label{font-size:12px;color:var(--mut);font-weight:600;display:block;margin-bottom:5px}
+.lfield input{width:100%;padding:10px 14px;border:1.5px solid var(--bor);border-radius:var(--r);font-size:14px;outline:none;font-family:inherit;transition:border-color .15s}
+.lfield input:focus{border-color:var(--br)}
+.lfield input.shake{animation:shk .4s}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 #pw-err{color:#c0392b;font-size:12px;margin-top:4px;display:none}
-.btn-login{width:100%;background:var(--brand);color:#fff;border:none;border-radius:var(--r);padding:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:4px}
-.btn-login:hover{background:var(--brand-l)}
-.login-hint{font-size:12px;color:var(--muted);margin-top:16px}
-.login-hint code{background:var(--gray);padding:2px 6px;border-radius:4px;font-size:11px}
+.btn-login{width:100%;background:var(--br);color:#fff;border:none;border-radius:var(--r);padding:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:4px}
+.btn-login:hover{background:var(--brl)}
+.login-hint{font-size:12px;color:var(--mut);margin-top:16px}
+.login-hint code{background:var(--gr);padding:2px 6px;border-radius:4px}
 
-/* ── APP SHELL ─────────────── */
+/* APP */
 #admin-app{display:flex;height:100vh;overflow:hidden}
 
-/* ── SIDEBAR ───────────────── */
-.sidebar{width:var(--sidebar-w);background:var(--brand-d);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
-.sidebar-logo{padding:20px;border-bottom:1px solid rgba(255,255,255,.1)}
-.sidebar-logo-text{font-size:18px;font-weight:600;color:#fff}
-.sidebar-logo-text span{opacity:.5;font-weight:400}
-.sidebar-logo-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
-.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
-.sidebar-section{font-size:10px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.8px;text-transform:uppercase;padding:12px 20px 6px}
-.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:rgba(255,255,255,.7);border-left:3px solid transparent;transition:all .15s;position:relative;user-select:none}
+/* SIDEBAR */
+.sidebar{width:var(--sw);background:var(--brd);display:flex;flex-direction:column;flex-shrink:0}
+.sb-logo{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo-t{font-size:18px;font-weight:700;color:#fff}
+.sb-logo-t span{opacity:.45;font-weight:400}
+.sb-logo-s{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+.sb-nav{flex:1;padding:10px 0;overflow-y:auto}
+.sb-sec{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.8px;text-transform:uppercase;padding:14px 20px 5px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:rgba(255,255,255,.65);border-left:3px solid transparent;transition:all .15s;user-select:none}
 .sidebar-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .sidebar-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:#fff}
-.sidebar-item-icon{font-size:18px;flex-shrink:0}
-.sidebar-item-label{font-size:13px;font-weight:500}
-.sidebar-item-badge{background:#e74c3c;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;margin-left:auto}
-.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)}
-.sidebar-clock{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:8px}
-.sidebar-site-link{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;padding:6px 0;transition:color .15s}
-.sidebar-site-link:hover{color:#fff}
-.sidebar-logout{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.4);cursor:pointer;padding:6px 0;background:none;border:none;font-family:inherit;width:100%;transition:color .15s;margin-top:4px}
-.sidebar-logout:hover{color:rgba(255,255,255,.8)}
+.si-icon{font-size:18px;flex-shrink:0}
+.si-label{font-size:13px;font-weight:500}
+.si-badge{background:#e74c3c;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;margin-left:auto}
+.sb-footer{padding:14px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-clock{font-size:11px;color:rgba(255,255,255,.35);margin-bottom:8px}
+.sb-link{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.55);cursor:pointer;padding:6px 0;background:none;border:none;font-family:inherit;width:100%;transition:color .15s}
+.sb-link:hover{color:#fff}
 
-/* ── MAIN AREA ─────────────── */
+/* MAIN */
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.topbar-title{font-size:16px;font-weight:600}
-.topbar-actions{display:flex;gap:8px;align-items:center}
-.content-area{flex:1;overflow-y:auto;padding:24px}
+.topbar{background:#fff;border-bottom:1px solid var(--bor);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:16px;font-weight:700}
+.topbar-actions{display:flex;gap:8px}
+.content{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:18px}
 
-/* ── TAB PANES ─────────────── */
-.tab-pane{display:none;flex-direction:column;gap:20px;height:100%}
-.tab-pane.full-h{height:100%}
+/* TAB PANES */
+.tab-pane{display:none}
 
-/* ── STAT CARDS ────────────── */
-.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;flex-shrink:0}
-.stat-card{background:#fff;border-radius:var(--rl);padding:18px;border:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
-.sc-label{font-size:12px;color:var(--muted);font-weight:500}
-.sc-value{font-size:28px;font-weight:700;line-height:1}
-.sc-value.red{color:var(--brand)}
-.sc-value.green{color:#16a34a}
-.sc-value.blue{color:#2563eb}
-.sc-icon{font-size:20px;margin-bottom:2px}
+/* STAT CARDS */
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat-card{background:#fff;border-radius:var(--rl);padding:16px 18px;border:1px solid var(--bor)}
+.sc-l{font-size:12px;color:var(--mut);font-weight:500;margin-bottom:6px}
+.sc-v{font-size:26px;font-weight:700;line-height:1}
+.sc-v.red{color:var(--br)}.sc-v.green{color:#16a34a}.sc-v.blue{color:#2563eb}
 
-/* ── TOOLBAR ───────────────── */
-.section-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border-radius:var(--rl);padding:14px 16px;border:1px solid var(--border);flex-shrink:0}
-.search-wrap{position:relative;flex:1;min-width:200px}
-.search-wrap input{width:100%;padding:8px 12px 8px 34px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;background:#f8f9fa;transition:border-color .15s,background .15s;font-family:inherit}
-.search-wrap input:focus{border-color:var(--brand);background:#fff}
-.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted);pointer-events:none}
-.filter-btns{display:flex;gap:4px;flex-wrap:wrap}
-.filter-btn{background:var(--gray);border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted);transition:all .15s;font-family:inherit;white-space:nowrap}
-.filter-btn:hover{border-color:var(--brand);color:var(--brand)}
-.filter-btn.active{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-d)}
-.select-ctrl{padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--r);font-size:12px;color:var(--muted);outline:none;background:#f8f9fa;cursor:pointer;font-family:inherit}
-.select-ctrl:focus{border-color:var(--brand)}
-.toolbar-count{font-size:12px;color:var(--muted);white-space:nowrap}
+/* TOOLBAR */
+.section-tb{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border-radius:var(--rl);padding:12px 14px;border:1px solid var(--bor)}
+.sw-wrap{position:relative;flex:1;min-width:180px}
+.sw-wrap input{width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--bor);border-radius:var(--r);font-size:13px;outline:none;background:var(--gr);font-family:inherit;transition:border-color .15s}
+.sw-wrap input:focus{border-color:var(--br);background:#fff}
+.sw-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--mut);pointer-events:none}
+.fbtns{display:flex;gap:4px;flex-wrap:wrap}
+.fbtn{background:var(--gr);border:1.5px solid var(--bor);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;color:var(--mut);font-family:inherit;white-space:nowrap;transition:all .15s}
+.fbtn:hover{border-color:var(--br);color:var(--br)}
+.fbtn.active{background:var(--bbg);border-color:var(--br);color:var(--brd)}
+.sel-ctrl{padding:7px 10px;border:1.5px solid var(--bor);border-radius:var(--r);font-size:12px;color:var(--mut);outline:none;background:var(--gr);cursor:pointer;font-family:inherit}
+.sel-ctrl:focus{border-color:var(--br)}
 
-/* ── BUTTONS ───────────────── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap}
-.btn-primary{background:var(--brand);color:#fff}
-.btn-primary:hover{background:var(--brand-l)}
-.btn-outline{background:#fff;color:var(--brand);border:1.5px solid var(--brand)}
-.btn-outline:hover{background:var(--brand-bg)}
-.btn-danger{background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca}
-.btn-danger:hover{background:#fee2e2}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--br);color:#fff}.btn-p:hover{background:var(--brl)}
+.btn-o{background:#fff;color:var(--br);border:1.5px solid var(--br)}.btn-o:hover{background:var(--bbg)}
+.btn-d{background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca}.btn-d:hover{background:#fee2e2}
 .btn-sm{padding:6px 12px;font-size:12px}
 
-/* ── ORDERS ────────────────── */
-.orders-wrap{display:flex;flex-direction:column;gap:12px;flex:1}
-.order-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--rl);overflow:hidden;transition:border-color .15s}
+/* ORDERS */
+.orders-wrap{display:flex;flex-direction:column;gap:10px}
+.order-card{background:#fff;border:1.5px solid var(--bor);border-radius:var(--rl);overflow:hidden}
 .order-card:hover{border-color:#cbd5e1}
-.order-new{border-color:var(--brand)!important;box-shadow:0 0 0 1px var(--brand)}
-.oc-head{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--gray)}
+.order-new{border-color:var(--br)!important;box-shadow:0 0 0 1px var(--br)}
+.oc-head{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:var(--gr);border-bottom:1px solid var(--bor)}
 .oc-head-left{display:flex;align-items:center;gap:10px}
-.oc-id{font-size:13px;font-weight:700;color:#1a1a1a}
-.oc-time{font-size:12px;color:var(--muted)}
-.oc-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.oc-id{font-size:13px;font-weight:700}
+.oc-time{font-size:12px;color:var(--mut)}
+.oc-body{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
 .oc-phone{display:flex;align-items:center;gap:10px}
-.oc-phone-icon{width:36px;height:36px;background:var(--brand-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.oc-phone-num{font-size:16px;font-weight:700;color:var(--brand-d)}
-.oc-phone-name{font-size:12px;color:var(--muted)}
-.oc-meta{display:flex;flex-wrap:wrap;gap:6px}
-.oc-pill{background:var(--gray);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--muted)}
-.oc-items{display:flex;flex-wrap:wrap;gap:6px}
-.order-tag{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:4px 10px;font-size:12px;color:#374151}
+.oc-phone-icon{width:34px;height:34px;background:var(--bbg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.oc-phone-num{font-size:15px;font-weight:700;color:var(--brd)}
+.oc-phone-name{font-size:12px;color:var(--mut)}
+.oc-meta{display:flex;flex-wrap:wrap;gap:5px}
+.oc-pill{background:var(--gr);border:1px solid var(--bor);border-radius:20px;padding:2px 9px;font-size:12px;color:var(--mut)}
+.oc-items{display:flex;flex-wrap:wrap;gap:5px}
+.order-tag{background:#fff;border:1px solid var(--bor);border-radius:var(--r);padding:3px 9px;font-size:12px;color:#374151}
 .order-tag b{font-weight:600;color:#1a1a1a}
-.oc-comment{font-size:12px;color:var(--muted);background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r);padding:6px 10px}
-.oc-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--gray)}
-.oc-total{font-size:17px;font-weight:700;color:var(--brand)}
-.oc-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.oc-btn{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:#374151;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
+.oc-comment{font-size:12px;color:var(--mut);background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r);padding:5px 9px}
+.oc-footer{padding:10px 16px;border-top:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;background:var(--gr)}
+.oc-total{font-size:17px;font-weight:700;color:var(--br)}
+.oc-actions{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.oc-btn{background:#fff;border:1.5px solid var(--bor);border-radius:var(--r);padding:5px 11px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:#374151;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:all .15s}
 .oc-btn:hover{border-color:#94a3b8;background:#f1f5f9}
-.oc-btn-ok{background:var(--brand);color:#fff;border-color:var(--brand)}
-.oc-btn-ok:hover{background:var(--brand-l)}
-.oc-btn-del{color:#b91c1c;border-color:#fecaca}
-.oc-btn-del:hover{background:#fef2f2;border-color:#b91c1c}
-.oc-done-label{font-size:12px;color:#16a34a;display:flex;align-items:center;gap:4px}
-.order-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
-.s-new{background:#fff0ee;color:var(--brand)}
-.s-proc{background:#fef9c3;color:#854d0e}
-.s-done{background:#f0fdf4;color:#166534}
-#orders-empty{text-align:center;padding:60px 20px;color:var(--muted);flex-direction:column;align-items:center;gap:12px;background:#fff;border-radius:var(--rl);border:1px solid var(--border)}
-#orders-empty div{font-size:48px}
+.oc-btn-ok{background:var(--br);color:#fff;border-color:var(--br)}.oc-btn-ok:hover{background:var(--brl)}
+.oc-btn-del{color:#b91c1c;border-color:#fecaca}.oc-btn-del:hover{background:#fef2f2;border-color:#b91c1c}
+.oc-done-label{font-size:12px;color:#16a34a;display:flex;align-items:center;gap:3px}
+.order-status{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.s-new{background:#fff0ee;color:var(--br)}.s-proc{background:#fef9c3;color:#854d0e}.s-done{background:#f0fdf4;color:#166534}
+#orders-empty{text-align:center;padding:50px 20px;color:var(--mut);background:#fff;border-radius:var(--rl);border:1px solid var(--bor)}
 
-/* ── PRODUCTS ADMIN ─────────── */
-.products-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-.pa-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--rl);overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s}
+/* PRODUCTS GRID */
+.products-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.pa-card{background:#fff;border:1.5px solid var(--bor);border-radius:var(--rl);overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s}
 .pa-card:hover{border-color:#94a3b8}
-.pa-card-img{height:140px;background:var(--brand-bg);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.pa-card-img{height:130px;background:var(--bbg);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .pa-card-img img{width:100%;height:100%;object-fit:cover}
-.pa-card-emoji{font-size:56px}
-.pa-badge{position:absolute;top:8px;left:8px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px}
-.pa-card-body{padding:12px;flex:1;display:flex;flex-direction:column;gap:4px}
-.pa-card-name{font-size:14px;font-weight:600;color:#1a1a1a;line-height:1.3}
-.pa-card-meta{font-size:12px;color:var(--muted)}
-.pa-card-cat{font-size:11px;color:var(--muted);background:var(--gray);border-radius:4px;padding:2px 6px;display:inline-block;margin-top:2px}
-.pa-card-price{font-size:16px;font-weight:700;color:var(--brand);margin-top:auto;padding-top:6px}
-.pa-old{font-size:12px;color:#9ca3af;text-decoration:line-through;margin-left:6px;font-weight:400}
-.pa-card-actions{display:flex;border-top:1px solid var(--border)}
-.pa-btn{flex:1;background:none;border:none;padding:10px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:4px}
+.pa-card-emoji{font-size:52px}
+.pa-badge{position:absolute;top:7px;left:7px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px}
+.pa-card-body{padding:11px;flex:1;display:flex;flex-direction:column;gap:4px}
+.pa-card-name{font-size:13px;font-weight:600;line-height:1.3}
+.pa-card-meta{font-size:12px;color:var(--mut)}
+.pa-card-cat{font-size:11px;color:var(--mut);background:var(--gr);border-radius:4px;padding:2px 6px;display:inline-block}
+.pa-card-pack{font-size:11px;color:#2563eb;font-weight:500;margin-top:2px}
+.pa-card-price{font-size:15px;font-weight:700;color:var(--br);margin-top:auto;padding-top:6px}
+.pa-old{font-size:11px;color:#9ca3af;text-decoration:line-through;margin-left:5px;font-weight:400}
+.pa-card-actions{display:flex;border-top:1px solid var(--bor)}
+.pa-btn{flex:1;background:none;border:none;padding:9px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:4px}
 .pa-btn-edit:hover{background:#f0fdf4;color:#166534}
-.pa-btn-del{border-left:1px solid var(--border)}
-.pa-btn-del:hover{background:#fef2f2;color:#b91c1c}
-#products-admin-empty{text-align:center;padding:60px 20px;color:var(--muted);flex-direction:column;align-items:center;gap:12px;background:#fff;border-radius:var(--rl);border:1px solid var(--border)}
-.badge-hit{background:#fef3c7;color:#92400e}
-.badge-new{background:#d1fae5;color:#065f46}
-.badge-eco{background:#ccfbf1;color:#065f46}
-.badge-sale{background:#fee2e2;color:#991b1b}
+.pa-btn-del{border-left:1px solid var(--bor)}.pa-btn-del:hover{background:#fef2f2;color:#b91c1c}
+#products-admin-empty{text-align:center;padding:50px;color:var(--mut);background:#fff;border-radius:var(--rl);border:1px solid var(--bor)}
+.badge-hit{background:#fef3c7;color:#92400e}.badge-new{background:#d1fae5;color:#065f46}
+.badge-eco{background:#ccfbf1;color:#065f46}.badge-sale{background:#fee2e2;color:#991b1b}
 
-/* ── MODAL ─────────────────── */
-#product-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
-.modal-box{background:#fff;border-radius:16px;width:560px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.2)}
-.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
-.modal-header h2{font-size:16px;font-weight:600}
-.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px}
-.modal-close:hover{background:var(--gray);color:#1a1a1a}
-.modal-body{padding:24px;display:flex;flex-direction:column;gap:16px}
-.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:#fff}
+/* CATEGORIES */
+.cats-wrap{display:flex;flex-direction:column;gap:8px}
+.cat-group{background:#fff;border:1.5px solid var(--bor);border-radius:var(--rl);overflow:hidden}
+.cat-row{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--bor)}
+.cat-row:last-child{border-bottom:none}
+.main-row{background:var(--gr)}
+.sub-row{padding-left:32px;background:#fff}
+.cat-row-emoji{font-size:20px;flex-shrink:0;width:28px;text-align:center}
+.cat-row-label{font-size:14px;font-weight:500;flex:1}
+.cat-row-id{font-size:11px;color:var(--mut);font-family:monospace;background:var(--gr);padding:2px 6px;border-radius:4px}
+.cat-row-actions{display:flex;gap:6px;margin-left:auto}
+.cabtn{background:var(--gr);border:1px solid var(--bor);border-radius:var(--r);padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap}
+.cabtn:hover{background:var(--bbg);border-color:var(--br);color:var(--brd)}
+.cabtn-add{color:var(--brd);font-weight:500}
+.cabtn-del:hover{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
 
-/* Photo upload */
-.photo-upload-area{border:2px dashed var(--border);border-radius:var(--rl);overflow:hidden;background:var(--gray);cursor:pointer;transition:border-color .15s;position:relative;height:160px;display:flex;align-items:center;justify-content:center}
-.photo-upload-area:hover{border-color:var(--brand);background:var(--brand-bg)}
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:500;padding:20px}
+.modal-box{background:#fff;border-radius:16px;width:540px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.2)}
+.modal-hdr{padding:18px 22px;border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-hdr h2{font-size:15px;font-weight:700}
+.modal-cls{background:none;border:none;font-size:20px;cursor:pointer;color:var(--mut);width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.modal-cls:hover{background:var(--gr);color:#1a1a1a}
+.modal-body{padding:22px;display:flex;flex-direction:column;gap:14px}
+.modal-ftr{padding:14px 22px;border-top:1px solid var(--bor);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:#fff}
+.modal-err{color:#b91c1c;font-size:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r);padding:8px 12px;display:none}
+
+/* PHOTO UPLOAD */
+.photo-area{border:2px dashed var(--bor);border-radius:var(--rl);height:150px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--gr);transition:border-color .15s;position:relative;overflow:hidden}
+.photo-area:hover{border-color:var(--br);background:var(--bbg)}
 #photo-preview{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:var(--rl)}
-#no-photo{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);pointer-events:none}
-#no-photo div{font-size:36px}
+#no-photo{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--mut);pointer-events:none}
+#no-photo div{font-size:32px}
 #no-photo p{font-size:13px;font-weight:500}
 #no-photo span{font-size:11px}
-.photo-controls{display:flex;gap:8px;margin-top:6px}
-.photo-file-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--brand-bg);color:var(--brand-d);border:1.5px solid var(--brand);border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s}
-.photo-file-btn:hover{background:#f1d9dc}
-.photo-remove-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#fef2f2;color:#b91c1c;border:1.5px solid #fecaca;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s}
-.photo-remove-btn:hover{background:#fee2e2}
+.photo-ctrl{display:flex;gap:8px;margin-top:6px}
+.ph-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;font-size:12px;font-weight:500;cursor:pointer;border-radius:var(--r);font-family:inherit;border:1.5px solid}
+.ph-btn-pick{background:var(--bbg);color:var(--brd);border-color:var(--br)}
+.ph-btn-pick:hover{background:#f1d9dc}
+.ph-btn-del{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
+.ph-btn-del:hover{background:#fee2e2}
 input[type=file]{display:none}
 
-/* Form fields */
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.field-group{display:flex;flex-direction:column;gap:5px}
-.field-group label{font-size:12px;font-weight:500;color:var(--muted)}
-.field-group input,.field-group select,.field-group textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s;background:#fff;color:#1a1a1a}
-.field-group input:focus,.field-group select:focus{border-color:var(--brand)}
-#modal-error{color:#b91c1c;font-size:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r);padding:8px 12px;display:none}
+/* FORM FIELDS */
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:12px;font-weight:600;color:var(--mut)}
+.fg input,.fg select,.fg textarea{padding:8px 12px;border:1.5px solid var(--bor);border-radius:var(--r);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s;background:#fff}
+.fg input:focus,.fg select:focus{border-color:var(--br)}
+.fg .hint{font-size:11px;color:var(--mut);margin-top:2px}
+.fg input:disabled{background:var(--gr);color:var(--mut)}
+.fsep{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.5px;padding-top:4px;border-top:1px solid var(--bor);margin-top:4px}
 
-/* ── STATS PAGE ─────────────── */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
-.recent-orders-card{background:#fff;border-radius:var(--rl);border:1px solid var(--border);overflow:hidden}
-.rec-card-title{padding:14px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--border);background:var(--gray)}
-.recent-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px}
+/* RECENT ORDERS */
+.recent-card{background:#fff;border-radius:var(--rl);border:1px solid var(--bor);overflow:hidden}
+.recent-card-hdr{padding:12px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--bor);background:var(--gr)}
+.recent-row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--bor);font-size:13px}
 .recent-row:last-child{border-bottom:none}
-.recent-id{font-weight:600;color:var(--brand);min-width:80px}
-.recent-phone{flex:1;color:var(--muted)}
+.recent-id{font-weight:700;color:var(--br);min-width:80px}
+.recent-phone{flex:1;color:var(--mut)}
 .recent-total{font-weight:600;min-width:80px;text-align:right}
-.empty-state-sm{padding:20px;text-align:center;color:var(--muted);font-size:13px}
+.empty-state-sm{padding:16px;text-align:center;color:var(--mut);font-size:13px}
 
-/* ── TOAST ─────────────────── */
-.admin-toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:var(--rl);font-size:13px;font-weight:500;opacity:0;transition:opacity .3s,transform .3s;z-index:9999;transform:translateY(8px);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+/* TOAST */
+.admin-toast{position:fixed;bottom:22px;right:22px;padding:11px 18px;border-radius:var(--rl);font-size:13px;font-weight:500;opacity:0;transition:opacity .3s,transform .3s;z-index:9999;transform:translateY(8px);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.12)}
 .admin-toast.show{opacity:1;transform:translateY(0)}
 .admin-toast-success{background:#166534;color:#fff}
 .admin-toast-info{background:#1e40af;color:#fff}
 
-/* ── SCROLLBAR ─────────────── */
-::-webkit-scrollbar{width:6px;height:6px}
-::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
-::-webkit-scrollbar-thumb:hover{background:#9ca3af}
 </style>
 </head>
 <body>
@@ -222,245 +220,184 @@ input[type=file]{display:none}
   <div class="login-box">
     <div class="login-logo">Upakovka<span>09</span></div>
     <div class="login-sub">Панель управления</div>
-    <div class="field">
-      <label>Пароль</label>
-      <input type="password" id="pw-input" placeholder="Введите пароль"/>
-      <div id="pw-err">Неверный пароль</div>
-    </div>
+    <div class="lfield"><label>Пароль</label><input type="password" id="pw-input" placeholder="Введите пароль"/><div id="pw-err">Неверный пароль</div></div>
     <button class="btn-login" onclick="doLogin()">Войти →</button>
-    <div class="login-hint">Пароль по умолчанию: <code>admin123</code><br>Измените в файле js/admin.js</div>
+    <div class="login-hint">По умолчанию: <code>admin123</code> — измените в js/admin.js</div>
   </div>
 </div>
 
 <!-- APP -->
 <div id="admin-app" style="display:none">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-text">Upakovka<span>09</span></div>
-      <div class="sidebar-logo-sub">Панель управления</div>
+    <div class="sb-logo">
+      <div class="sb-logo-t">Upakovka<span>09</span></div>
+      <div class="sb-logo-s">Панель управления</div>
     </div>
-    <nav class="sidebar-nav">
-      <div class="sidebar-section">Главное</div>
-      <div class="sidebar-item active" data-tab="stats" onclick="showTab('stats',this)">
-        <span class="sidebar-item-icon">📊</span>
-        <span class="sidebar-item-label">Статистика</span>
-      </div>
-      <div class="sidebar-item" data-tab="orders" onclick="showTab('orders',this)">
-        <span class="sidebar-item-icon">📦</span>
-        <span class="sidebar-item-label">Заказы</span>
-        <span class="sidebar-item-badge" id="sidebar-new-count" style="display:none">0</span>
-      </div>
-      <div class="sidebar-section">Магазин</div>
-      <div class="sidebar-item" data-tab="products" onclick="showTab('products',this)">
-        <span class="sidebar-item-icon">🏷️</span>
-        <span class="sidebar-item-label">Товары</span>
-      </div>
+    <nav class="sb-nav">
+      <div class="sb-sec">Главное</div>
+      <div class="sidebar-item active" data-tab="stats" onclick="showTab('stats')"><span class="si-icon">📊</span><span class="si-label">Статистика</span></div>
+      <div class="sidebar-item" data-tab="orders" onclick="showTab('orders')"><span class="si-icon">📦</span><span class="si-label">Заказы</span><span class="si-badge" id="sidebar-new-count" style="display:none">0</span></div>
+      <div class="sb-sec">Магазин</div>
+      <div class="sidebar-item" data-tab="products" onclick="showTab('products')"><span class="si-icon">🏷️</span><span class="si-label">Товары</span></div>
+      <div class="sidebar-item" data-tab="categories" onclick="showTab('categories')"><span class="si-icon">🗂️</span><span class="si-label">Категории</span></div>
     </nav>
-    <div class="sidebar-footer">
-      <div class="sidebar-clock" id="admin-clock"></div>
-      <div class="sidebar-site-link" onclick="window.open('index.html','_blank')">
-        🌐 Открыть сайт ↗
-      </div>
-      <button class="sidebar-logout" onclick="adminLogout()">
-        🚪 Выйти
-      </button>
+    <div class="sb-footer">
+      <div class="sb-clock" id="admin-clock"></div>
+      <button class="sb-link" onclick="window.open('index.html','_blank')">🌐 Открыть сайт ↗</button>
+      <button class="sb-link" onclick="adminLogout()">🚪 Выйти</button>
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="main-area">
 
-    <!-- ═══ STATS ═══ -->
-    <div id="tab-stats" class="tab-pane content-area" style="display:flex">
+    <!-- ══ СТАТИСТИКА ══ -->
+    <div id="tab-stats" class="tab-pane content">
+      <div class="topbar" style="position:static;flex-shrink:0"><div class="topbar-title">Статистика</div></div>
       <div class="stat-cards">
-        <div class="stat-card"><div class="sc-icon">📦</div><div class="sc-label">Всего заказов</div><div class="sc-value" id="stat-orders">0</div></div>
-        <div class="stat-card"><div class="sc-icon">🆕</div><div class="sc-label">Новых заказов</div><div class="sc-value red" id="stat-new-orders">0</div></div>
-        <div class="stat-card"><div class="sc-icon">💰</div><div class="sc-label">Выручка (выполн.)</div><div class="sc-value green" id="stat-revenue">0 ₽</div></div>
-        <div class="stat-card"><div class="sc-icon">🏷️</div><div class="sc-label">Товаров в каталоге</div><div class="sc-value blue" id="stat-products">0</div></div>
+        <div class="stat-card"><div class="sc-l">📦 Всего заказов</div><div class="sc-v" id="stat-orders">0</div></div>
+        <div class="stat-card"><div class="sc-l">🆕 Новых заказов</div><div class="sc-v red" id="stat-new-orders">0</div></div>
+        <div class="stat-card"><div class="sc-l">💰 Выручка</div><div class="sc-v green" id="stat-revenue">0 ₽</div></div>
+        <div class="stat-card"><div class="sc-l">🏷️ Товаров</div><div class="sc-v blue" id="stat-products">0</div></div>
       </div>
-      <div class="recent-orders-card">
-        <div class="rec-card-title">Последние заказы</div>
+      <div class="recent-card">
+        <div class="recent-card-hdr">Последние заказы</div>
         <div id="recent-orders"></div>
       </div>
     </div>
 
-    <!-- ═══ ORDERS ═══ -->
-    <div id="tab-orders" class="tab-pane" style="display:none">
-      <div class="topbar">
-        <div class="topbar-title">Заказы</div>
-        <div class="topbar-actions">
-          <button class="btn btn-danger btn-sm" onclick="clearAllOrders()">🗑 Очистить все</button>
-        </div>
-      </div>
-      <div class="content-area" style="display:flex;flex-direction:column;gap:16px">
+    <!-- ══ ЗАКАЗЫ ══ -->
+    <div id="tab-orders" class="tab-pane" style="display:flex;flex-direction:column;overflow:hidden;height:100%">
+      <div class="topbar"><div class="topbar-title">Заказы</div><div class="topbar-actions"><button class="btn btn-d btn-sm" onclick="clearAllOrders()">🗑 Очистить все</button></div></div>
+      <div class="content">
         <div class="stat-cards">
-          <div class="stat-card"><div class="sc-label">Всего</div><div class="sc-value" id="os-total">0</div></div>
-          <div class="stat-card"><div class="sc-label">Новых</div><div class="sc-value red" id="os-new">0</div></div>
-          <div class="stat-card"><div class="sc-label">В обработке</div><div class="sc-value" id="os-proc">0</div></div>
-          <div class="stat-card"><div class="sc-label">Выполнено</div><div class="sc-value green" id="os-done">0</div></div>
-          <div class="stat-card"><div class="sc-label">Выручка (выполн.)</div><div class="sc-value green" id="os-revenue">0 ₽</div></div>
+          <div class="stat-card"><div class="sc-l">Всего</div><div class="sc-v" id="os-total">0</div></div>
+          <div class="stat-card"><div class="sc-l">Новых</div><div class="sc-v red" id="os-new">0</div></div>
+          <div class="stat-card"><div class="sc-l">В обработке</div><div class="sc-v" id="os-proc">0</div></div>
+          <div class="stat-card"><div class="sc-l">Выполнено</div><div class="sc-v green" id="os-done">0</div></div>
+          <div class="stat-card"><div class="sc-l">Выручка</div><div class="sc-v green" id="os-revenue">0 ₽</div></div>
         </div>
-        <div class="section-toolbar">
-          <div class="search-wrap">
-            <span class="search-icon">🔍</span>
-            <input type="text" placeholder="Поиск по номеру, телефону, ID..." oninput="searchOrders(this.value)"/>
-          </div>
-          <div class="filter-btns">
-            <button class="filter-btn orders-filter-btn active" onclick="filterOrders('all',this)">Все</button>
-            <button class="filter-btn orders-filter-btn" onclick="filterOrders('new',this)">🆕 Новые</button>
-            <button class="filter-btn orders-filter-btn" onclick="filterOrders('processing',this)">⏳ В обработке</button>
-            <button class="filter-btn orders-filter-btn" onclick="filterOrders('done',this)">✅ Выполнены</button>
+        <div class="section-tb">
+          <div class="sw-wrap"><span class="sw-ico">🔍</span><input type="text" placeholder="Поиск: телефон, имя, ID..." oninput="searchOrders(this.value)"/></div>
+          <div class="fbtns">
+            <button class="fbtn orders-filter-btn active" onclick="filterOrders('all',this)">Все</button>
+            <button class="fbtn orders-filter-btn" onclick="filterOrders('new',this)">🆕 Новые</button>
+            <button class="fbtn orders-filter-btn" onclick="filterOrders('processing',this)">⏳ В обработке</button>
+            <button class="fbtn orders-filter-btn" onclick="filterOrders('done',this)">✅ Выполнены</button>
           </div>
         </div>
-        <div class="orders-wrap">
-          <div id="orders-list" style="display:flex;flex-direction:column;gap:10px"></div>
-          <div id="orders-empty" style="display:none">
-            <div>📭</div>
-            <p>Заказов пока нет</p>
-          </div>
-        </div>
+        <div class="orders-wrap"><div id="orders-list" style="display:flex;flex-direction:column;gap:10px"></div><div id="orders-empty" style="display:none"><div style="font-size:40px;margin-bottom:10px">📭</div><p>Заказов нет</p></div></div>
       </div>
     </div>
 
-    <!-- ═══ PRODUCTS ═══ -->
-    <div id="tab-products" class="tab-pane" style="display:none">
-      <div class="topbar">
-        <div class="topbar-title">Товары <span class="toolbar-count" id="prod-count" style="font-weight:400;font-size:13px;color:var(--muted);margin-left:6px"></span></div>
-        <div class="topbar-actions">
-          <button class="btn btn-primary" onclick="openProductModal()">+ Добавить товар</button>
-        </div>
-      </div>
-      <div class="content-area" style="display:flex;flex-direction:column;gap:16px">
-        <div class="section-toolbar">
-          <div class="search-wrap">
-            <span class="search-icon">🔍</span>
-            <input type="text" placeholder="Поиск по названию..." oninput="searchProducts(this.value)"/>
+    <!-- ══ ТОВАРЫ ══ -->
+    <div id="tab-products" class="tab-pane" style="display:flex;flex-direction:column;overflow:hidden;height:100%">
+      <div class="topbar"><div class="topbar-title">Товары <span style="font-weight:400;font-size:13px;color:var(--mut)" id="prod-count"></span></div><div class="topbar-actions"><button class="btn btn-p" onclick="openProductModal()">+ Добавить товар</button></div></div>
+      <div class="content">
+        <div class="section-tb">
+          <div class="sw-wrap"><span class="sw-ico">🔍</span><input type="text" placeholder="Поиск по названию..." oninput="searchProducts(this.value)"/></div>
+          <div class="fbtns">
+            <button class="fbtn prod-filter-btn active" onclick="filterProducts('all',this)">Все</button>
+            <button class="fbtn prod-filter-btn" onclick="filterProducts('containers',this)">📦 Контейнеры</button>
+            <button class="fbtn prod-filter-btn" onclick="filterProducts('cups',this)">☕ Стаканы</button>
+            <button class="fbtn prod-filter-btn" onclick="filterProducts('bags',this)">🛍️ Пакеты</button>
+            <button class="fbtn prod-filter-btn" onclick="filterProducts('plates',this)">🍽️ Тарелки</button>
           </div>
-          <div class="filter-btns">
-            <button class="filter-btn prod-filter-btn active" onclick="filterProducts('all',this)">Все</button>
-            <button class="filter-btn prod-filter-btn" onclick="filterProducts('containers',this)">📦 Контейнеры</button>
-            <button class="filter-btn prod-filter-btn" onclick="filterProducts('cups',this)">☕ Стаканы</button>
-            <button class="filter-btn prod-filter-btn" onclick="filterProducts('bags',this)">🛍️ Пакеты</button>
-            <button class="filter-btn prod-filter-btn" onclick="filterProducts('plates',this)">🍽️ Тарелки</button>
-          </div>
-          <select class="select-ctrl" onchange="sortProducts(this.value)">
+          <select class="sel-ctrl" onchange="sortProducts(this.value)">
             <option value="default">По умолчанию</option>
-            <option value="price_asc">Цена: дешевле</option>
-            <option value="price_desc">Цена: дороже</option>
-            <option value="name">По названию А–Я</option>
+            <option value="price_asc">Дешевле</option>
+            <option value="price_desc">Дороже</option>
+            <option value="name">А–Я</option>
           </select>
         </div>
         <div class="products-admin-grid" id="products-admin-grid"></div>
-        <div id="products-admin-empty" style="display:none">
-          <div style="font-size:48px">🔍</div>
-          <p>Товаров не найдено</p>
-        </div>
+        <div id="products-admin-empty" style="display:none"><div style="font-size:40px;margin-bottom:10px">🔍</div><p>Товары не найдены</p></div>
       </div>
     </div>
 
-  </div><!-- /main-area -->
-</div><!-- /admin-app -->
+    <!-- ══ КАТЕГОРИИ ══ -->
+    <div id="tab-categories" class="tab-pane" style="display:flex;flex-direction:column;overflow:hidden;height:100%">
+      <div class="topbar"><div class="topbar-title">Категории и подкатегории</div><div class="topbar-actions"><button class="btn btn-p" onclick="addMainCat()">+ Добавить категорию</button></div></div>
+      <div class="content">
+        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:var(--r);padding:12px 16px;font-size:13px;color:#856404">
+          ⚠️ <strong>Важно:</strong> ID категории нельзя изменить после создания — он связан с товарами. Редактировать можно только название и эмодзи.
+        </div>
+        <div class="cats-wrap" id="cats-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <!-- PRODUCT MODAL -->
-<div id="product-modal">
+<div class="modal-backdrop" id="product-modal">
   <div class="modal-box" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h2 id="modal-title">Новый товар</h2>
-      <button class="modal-close" onclick="closeProductModal()">✕</button>
-    </div>
+    <div class="modal-hdr"><h2 id="modal-title">Новый товар</h2><button class="modal-cls" onclick="closeProductModal()">✕</button></div>
     <div class="modal-body">
-      <div id="modal-error"></div>
+      <div class="modal-err" id="modal-error"></div>
 
-      <!-- ФОТО -->
-      <div class="field-group">
+      <div class="fg">
         <label>Фото товара</label>
-        <div class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+        <div class="photo-area" onclick="document.getElementById('photo-input').click()">
           <img id="photo-preview" src="" alt="" style="display:none"/>
-          <div id="no-photo">
-            <div>📷</div>
-            <p>Нажмите чтобы загрузить</p>
-            <span>JPG, PNG до 2 МБ</span>
-          </div>
+          <div id="no-photo"><div>📷</div><p>Нажмите чтобы загрузить</p><span>JPG/PNG · авто-сжатие до 640px</span></div>
         </div>
-        <div class="photo-controls">
-          <label class="photo-file-btn" for="photo-input">📂 Выбрать файл</label>
-          <button class="photo-remove-btn" type="button" onclick="removePhoto()">✕ Удалить фото</button>
+        <div class="photo-ctrl">
+          <label class="ph-btn ph-btn-pick" for="photo-input">📂 Выбрать файл</label>
+          <button class="ph-btn ph-btn-del" type="button" onclick="removePhotoBtn()">✕ Удалить</button>
         </div>
         <input type="file" id="photo-input" accept="image/*" onchange="handlePhotoUpload(this)"/>
       </div>
 
-      <!-- ОСНОВНОЕ -->
-      <div class="form-row">
-        <div class="field-group">
-          <label>Эмодзи (если нет фото)</label>
-          <input type="text" id="m-emoji" placeholder="📦"/>
-        </div>
-        <div class="field-group">
-          <label>Категория</label>
-          <select id="m-cat">
-            <option value="containers">📦 Контейнеры</option>
-            <option value="cups">☕ Стаканы</option>
-            <option value="bags">🛍️ Пакеты</option>
-            <option value="plates">🍽️ Тарелки</option>
-          </select>
-        </div>
+      <div class="frow">
+        <div class="fg"><label>Эмодзи (если нет фото)</label><input type="text" id="m-emoji" placeholder="📦"/></div>
+        <div class="fg"><label>Значок</label><select id="m-badge"><option value="">Нет</option><option value="hit">🔥 Хит продаж</option><option value="new">🆕 Новинка</option><option value="eco">🌿 Эко</option><option value="sale">💸 Скидка</option></select></div>
       </div>
 
-      <div class="field-group">
-        <label>Название <span style="color:#c0392b">*</span></label>
-        <input type="text" id="m-name" placeholder="Контейнер пластиковый 500мл"/>
+      <div class="fg"><label>Название <span style="color:#c0392b">*</span></label><input type="text" id="m-name" placeholder="Контейнер пластиковый 500мл"/></div>
+      <div class="fg"><label>Описание / материал</label><input type="text" id="m-meta" placeholder="Полипропилен PP, крышка в комплекте"/></div>
+
+      <div class="frow">
+        <div class="fg"><label>Категория</label><select id="m-cat"></select></div>
+        <div class="fg"><label>Подкатегория</label><select id="m-subcat"></select></div>
       </div>
 
-      <div class="field-group">
-        <label>Описание / материал</label>
-        <input type="text" id="m-meta" placeholder="Полипропилен PP, крышка в комплекте"/>
+      <div class="frow">
+        <div class="fg"><label>Цена, ₽ <span style="color:#c0392b">*</span></label><input type="number" id="m-price" placeholder="4.90" step="0.01" min="0"/></div>
+        <div class="fg"><label>Старая цена, ₽</label><input type="number" id="m-oldprice" placeholder="6.50" step="0.01" min="0"/></div>
       </div>
 
-      <div class="form-row">
-        <div class="field-group">
-          <label>Цена, ₽ <span style="color:#c0392b">*</span></label>
-          <input type="number" id="m-price" placeholder="4.90" step="0.01" min="0"/>
-        </div>
-        <div class="field-group">
-          <label>Старая цена, ₽ (для скидки)</label>
-          <input type="number" id="m-oldprice" placeholder="6.50" step="0.01" min="0"/>
-        </div>
+      <div class="fg">
+        <label>В упаковке, шт. <span style="color:#2563eb;font-weight:400">(минимальный заказ и шаг кнопок +/−)</span></label>
+        <input type="number" id="m-packqty" placeholder="50" min="1" value="50"/>
+        <span class="hint">Покупатель будет заказывать кратно этому числу</span>
       </div>
 
-      <div class="field-group">
-        <label>Значок</label>
-        <select id="m-badge">
-          <option value="">Нет</option>
-          <option value="hit">🔥 Хит продаж</option>
-          <option value="new">🆕 Новинка</option>
-          <option value="eco">🌿 Эко</option>
-          <option value="sale">💸 Скидка</option>
-        </select>
+      <div class="fsep">Характеристики</div>
+      <div class="frow">
+        <div class="fg"><label>Материал</label><input type="text" id="m-material" placeholder="Полипропилен PP"/></div>
+        <div class="fg"><label>Объём</label><input type="text" id="m-volume" placeholder="500 мл"/></div>
       </div>
+      <div class="fg"><label>Размер</label><input type="text" id="m-size" placeholder="18×13×5 см"/></div>
+    </div>
+    <div class="modal-ftr"><button class="btn btn-o" onclick="closeProductModal()">Отмена</button><button class="btn btn-p" onclick="saveProduct()">💾 Сохранить</button></div>
+  </div>
+</div>
 
-      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding-top:4px">Характеристики</div>
-
-      <div class="form-row">
-        <div class="field-group">
-          <label>Материал</label>
-          <input type="text" id="m-material" placeholder="Полипропилен PP"/>
-        </div>
-        <div class="field-group">
-          <label>Объём</label>
-          <input type="text" id="m-volume" placeholder="500 мл"/>
-        </div>
-      </div>
-      <div class="field-group">
-        <label>Размер</label>
-        <input type="text" id="m-size" placeholder="18×13×5 см"/>
+<!-- CATEGORY MODAL -->
+<div class="modal-backdrop" id="cat-modal">
+  <div class="modal-box" style="width:400px" onclick="event.stopPropagation()">
+    <div class="modal-hdr"><h2 id="cat-modal-title">Категория</h2><button class="modal-cls" onclick="closeCatModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="modal-err" id="cat-modal-error"></div>
+      <div class="fg" id="cm-emoji-row"><label>Эмодзи</label><input type="text" id="cm-emoji" placeholder="📦"/></div>
+      <div class="fg"><label>Название <span style="color:#c0392b">*</span></label><input type="text" id="cm-label" placeholder="Название категории"/></div>
+      <div class="fg">
+        <label>ID (латиница)</label>
+        <input type="text" id="cm-id" placeholder="containers"/>
+        <span class="hint" id="cm-id-hint"></span>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeProductModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="saveProduct()">💾 Сохранить</button>
-    </div>
+    <div class="modal-ftr"><button class="btn btn-o" onclick="closeCatModal()">Отмена</button><button class="btn btn-p" onclick="saveCatModal()">💾 Сохранить</button></div>
   </div>
 </div>
 
