@@ -348,16 +348,20 @@ input[type=file]{display:none}
       <div class="merr" id="merr"></div>
       <div class="fg">
         <label>Фото товара</label>
-        <div class="pharea" onclick="document.getElementById('ph-file').click()">
+        <div class="pharea" id="ph-area" onclick="document.getElementById('ph-file').click()">
           <img id="photo-preview" src="" alt="" style="display:none"/>
-          <div id="no-photo"><div class="ni">📷</div><p>Нажмите чтобы загрузить</p><span>JPG/PNG · загружается на ImgBB</span></div>
+          <div id="no-photo">
+            <div class="ni">📷</div>
+            <p>Нажмите чтобы выбрать фото</p>
+            <span>JPG / PNG · до 32 МБ</span>
+          </div>
         </div>
         <div class="phctrl">
-          <label class="ph-pick" for="ph-file" id="ph-pick-lbl">📂 Выбрать файл</label>
-          <button class="ph-del" type="button" onclick="removeProdPhoto()">✕ Удалить</button>
+          <label class="ph-pick" for="ph-file">📂 Выбрать файл</label>
+          <button class="ph-del" type="button" onclick="removeProdPhoto()">✕ Удалить фото</button>
         </div>
-        <div id="ph-status" style="font-size:12px;color:var(--mut);margin-top:4px;display:none"></div>
-        <input type="file" id="ph-file" accept="image/*" onchange="onPhotoFile(this)"/>
+        <div id="ph-status"></div>
+        <input type="file" id="ph-file" accept="image/jpeg,image/png,image/gif,image/webp" onchange="onPhotoFile(this)"/>
       </div>
       <div class="frow">
         <div class="fg"><label>Эмодзи (если нет фото)</label><input id="m-emoji" type="text" placeholder="📦"/></div>
@@ -431,7 +435,7 @@ var PASS = 'admin123';
 
 // ── state ──────────────────────────────────────────
 var oFilter='all', oSearch='', pCat='all', pSearch='', pSort='';
-var editId=null, pendingPhoto='';
+var editId=null;
 var catEditing={type:'',catId:'',subId:''};
 
 // ── auth ───────────────────────────────────────────
@@ -588,7 +592,7 @@ function renderProds(){
 
 // ── product modal ──────────────────────────────────
 function openProdModal(id){
-  editId=id||null; pendingPhoto='';
+  editId=id||null; pendingPhotoB64='';
   var p=id?getProducts().find(function(x){return x.id===id;}):null;
   document.getElementById('mprod-title').textContent=p?'Редактировать товар':'Новый товар';
   setVal('m-emoji',p?p.emoji:'📦');
@@ -607,6 +611,7 @@ function openProdModal(id){
   var noph=document.getElementById('no-photo');
   if(ph){prev.src=ph;prev.style.display='block';noph.style.display='none';}
   else{prev.style.display='none';noph.style.display='flex';}
+  setPhStatus('','');
   document.getElementById('ph-file').value='';
   document.getElementById('merr').style.display='none';
   document.getElementById('modal-prod').style.display='flex';
@@ -634,90 +639,92 @@ function buildSubSel(catId,selSub){
   }
 }
 
-// ══ IMGBB API KEY ════════════════════════════════════
-// Получите на https://imgbb.com → Account → API
-// После регистрации: https://api.imgbb.com/ → Add API key
-var IMGBB_KEY = 'ВАШ_КЛЮЧ_ЗДЕСЬ';
-// ═════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// ImgBB API — фото загружаются туда и видны всем устройствам
+// ═══════════════════════════════════════════════════════
+var IMGBB_KEY = '605aad32ee4f662d7c61875d4e055c66';
+
+// Состояние фото в открытой модалке:
+//   ''        — фото не менялось
+//   '__del__' — пользователь удалил фото
+//   иначе     — base64 нового фото (до загрузки на ImgBB)
+var pendingPhotoB64 = '';
+
+function setPhStatus(msg, type){
+  var el = document.getElementById('ph-status');
+  if(!msg){ el.style.cssText = 'display:none'; return; }
+  var colors = { ok:'#16a34a', err:'#c0392b', loading:'#2563eb' };
+  el.style.cssText = 'font-size:12px;margin-top:6px;padding:6px 10px;border-radius:6px;display:block;' +
+    'background:' + (type==='err' ? '#fef2f2' : type==='ok' ? '#f0fdf4' : '#eff6ff') + ';' +
+    'color:' + (colors[type] || '#374151');
+  el.textContent = msg;
+}
 
 function onPhotoFile(input){
   var file = input.files[0];
   if(!file) return;
-  if(file.size > 10*1024*1024){ alert('Максимум 10 МБ'); return; }
 
-  // Показываем превью сразу (локально)
+  // Превью сразу — до загрузки
   var reader = new FileReader();
   reader.onload = function(e){
     compressPhoto(e.target.result, function(compressed){
-      pendingPhoto = compressed; // временно храним локально
-      var prev = document.getElementById('photo-preview');
-      var noph = document.getElementById('no-photo');
-      prev.src = compressed;
-      prev.style.display = 'block';
-      noph.style.display = 'none';
-      setPhStatus('✓ Фото выбрано. Будет загружено при сохранении товара.', 'ok');
+      pendingPhotoB64 = compressed;
+      document.getElementById('photo-preview').src = compressed;
+      document.getElementById('photo-preview').style.display = 'block';
+      document.getElementById('no-photo').style.display = 'none';
+      setPhStatus('Фото выбрано. Будет загружено на ImgBB при сохранении товара.', 'ok');
     });
   };
   reader.readAsDataURL(file);
 }
 
 function removeProdPhoto(){
-  pendingPhoto = '__del__';
+  pendingPhotoB64 = '__del__';
   document.getElementById('photo-preview').style.display = 'none';
   document.getElementById('no-photo').style.display = 'flex';
   document.getElementById('ph-file').value = '';
-  setPhStatus('', '');
+  setPhStatus('Фото будет удалено при сохранении.', 'err');
 }
 
-function setPhStatus(msg, type){
-  var el = document.getElementById('ph-status');
-  if(!msg){ el.style.display='none'; return; }
-  el.textContent = msg;
-  el.style.color = type==='err' ? '#c0392b' : type==='ok' ? '#16a34a' : '#2563eb';
-  el.style.display = 'block';
-}
+function uploadToImgBB(base64data, onDone){
+  // Убираем data:image/...;base64, — ImgBB принимает только чистый base64
+  var b64 = base64data.replace(/^data:[^;]+;base64,/, '');
+  var form = new FormData();
+  form.append('key', IMGBB_KEY);
+  form.append('image', b64);
 
-function uploadToImgBB(base64data, callback){
-  if(IMGBB_KEY === 'ВАШ_КЛЮЧ_ЗДЕСЬ'){
-    // Ключ не задан — сохраняем локально как раньше
-    callback(null, base64data);
-    return;
-  }
-  // Убираем префикс data:image/...;base64,
-  var b64 = base64data.replace(/^data:image\/[a-z]+;base64,/, '');
-  setPhStatus('⏳ Загружаем фото на ImgBB...', 'blue');
-  var formData = new FormData();
-  formData.append('key', IMGBB_KEY);
-  formData.append('image', b64);
-  fetch('https://api.imgbb.com/1/upload', { method:'POST', body:formData })
+  setPhStatus('⏳ Загружаем фото на ImgBB…', 'loading');
+
+  fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: form })
     .then(function(r){ return r.json(); })
     .then(function(data){
-      if(data.success){
-        var url = data.data.display_url; // прямая ссылка на изображение
-        setPhStatus('✓ Фото загружено на ImgBB', 'ok');
-        callback(null, url);
+      if(data && data.success){
+        setPhStatus('✓ Фото успешно загружено на ImgBB', 'ok');
+        onDone(data.data.display_url); // прямая https-ссылка
       } else {
-        setPhStatus('Ошибка ImgBB: ' + (data.error && data.error.message || 'неизвестная'), 'err');
-        callback('ImgBB error', null);
+        var msg = (data && data.error && data.error.message) || 'неизвестная ошибка';
+        setPhStatus('Ошибка ImgBB: ' + msg, 'err');
+        onDone(''); // не сохраняем сломанное фото
       }
     })
     .catch(function(err){
-      setPhStatus('Ошибка сети. Фото сохранено локально (только на этом устройстве).', 'err');
-      callback(null, base64data); // fallback — сохраняем локально
+      setPhStatus('Ошибка сети при загрузке фото: ' + err.message, 'err');
+      onDone('');
     });
 }
 
 function saveProd(){
   var name  = getVal('m-name').trim();
   var price = getVal('m-price');
-  if(!name){ showErr('merr','Введите название'); return; }
-  if(!price||isNaN(parseFloat(price))){ showErr('merr','Введите цену'); return; }
+  if(!name){  showErr('merr', 'Введите название'); return; }
+  if(!price || isNaN(parseFloat(price))){ showErr('merr', 'Введите цену'); return; }
 
-  // Блокируем кнопку пока идёт загрузка
-  var saveBtn = document.querySelector('#modal-prod .bp');
-  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='Сохраняю...'; }
+  // Блокируем кнопку на время загрузки
+  var btn = document.querySelector('#modal-prod .mftr .bp');
+  function lockBtn(){ if(btn){ btn.disabled=true; btn.textContent='Сохраняю…'; } }
+  function unlockBtn(){ if(btn){ btn.disabled=false; btn.textContent='💾 Сохранить'; } }
 
-  function doSave(photoUrl){
+  function finalize(photoUrl){
     var prods = getProducts();
     var prod = {
       id:       editId || nextId(),
@@ -733,42 +740,37 @@ function saveProd(){
       material: getVal('m-mat').trim() || '—',
       volume:   getVal('m-vol').trim() || '—',
       size:     getVal('m-size').trim() || '—',
-      photo:    photoUrl || '',   // URL на ImgBB или пустая строка
+      photo:    photoUrl,
     };
-    if(editId){ var idx=prods.findIndex(function(p){return p.id===editId;}); if(idx>=0) prods[idx]=prod; else prods.push(prod); }
-    else prods.push(prod);
-    saveProducts(prods);
-
-    // Если URL — сохраняем в отдельный ключ для совместимости с getPhoto()
-    if(photoUrl && photoUrl.startsWith('http')){
-      localStorage.setItem('up_photo_'+prod.id, photoUrl);
-    } else if(pendingPhoto==='__del__'){
-      deletePhoto(prod.id);
-    } else if(photoUrl && !photoUrl.startsWith('http')){
-      // base64 fallback
-      try{ localStorage.setItem('up_photo_'+prod.id, photoUrl); }catch(e){}
+    if(editId){
+      var idx = prods.findIndex(function(p){ return p.id === editId; });
+      if(idx >= 0) prods[idx] = prod; else prods.push(prod);
+    } else {
+      prods.push(prod);
     }
-
-    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 Сохранить'; }
+    saveProducts(prods);
+    unlockBtn();
     closeProdModal();
     renderProds();
     showToast(editId ? 'Товар сохранён ✓' : 'Товар добавлен ✓', 'ok');
   }
 
-  if(pendingPhoto && pendingPhoto !== '__del__' && pendingPhoto.startsWith('data:')){
-    // Новое фото — загружаем на ImgBB
-    uploadToImgBB(pendingPhoto, function(err, url){
-      doSave(err ? '' : url);
+  if(pendingPhotoB64 && pendingPhotoB64 !== '__del__'){
+    // Есть новое фото — загружаем на ImgBB
+    lockBtn();
+    uploadToImgBB(pendingPhotoB64, function(url){
+      finalize(url);
     });
-  } else if(pendingPhoto === '__del__'){
-    doSave('');
+  } else if(pendingPhotoB64 === '__del__'){
+    // Фото удалено
+    finalize('');
   } else {
-    // Фото не менялось — берём текущее
+    // Фото не менялось — берём существующий URL
     var existing = editId ? getPhoto(editId) : '';
-    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 Сохранить'; }
-    doSave(existing);
+    finalize(existing);
   }
 }
+
 function delProd(id){
   var p=getProducts().find(function(x){return x.id===id;});
   if(!p||!confirm('Удалить "'+p.name+'"?'))return;
