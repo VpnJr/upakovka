@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Товар — Upakovka09</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<header class="header">
+  <a href="index.html" class="logo">Upakovka<span>09</span></a>
+  <a href="index.html" class="back-link">← В каталог</a>
+  <div class="header-right">
+    <button class="cart-btn" onclick="openCart()">🛒 Корзина <span class="cart-count-badge cart-badge">0</span></button>
+  </div>
+</header>
+
+<div id="bc"></div>
+<div id="pw"></div>
+<div id="sw"></div>
+<div id="rw"></div>
+
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-drawer-header"><h2>Корзина <span class="cart-count-badge cart-badge">0</span></h2><button onclick="closeCart()">✕</button></div>
+  <div class="cart-drawer-body" id="cart-drawer-body"></div>
+  <div class="cart-drawer-footer" id="cart-drawer-footer" style="display:none">
+    <div class="cart-drawer-total">Итого: <strong id="cart-total-val">0 ₽</strong></div>
+    <a href="checkout.html" class="btn-primary btn-block">Оформить заказ →</a>
+  </div>
+</div>
+<div id="cart-toast" class="cart-toast">✓ Товар добавлен в корзину</div>
+
+<script src="js/data.js"></script>
+<script src="js/cart.js"></script>
+<script>
+(function(){
+  var id = parseInt(new URLSearchParams(location.search).get('id'));
+
+  function renderPage(){
+    var p = getProducts().find(function(x){ return x.id === id; });
+    refreshCartUI();
+
+  if(!p){
+    document.getElementById('pw').innerHTML='<div class="not-found"><h2>Товар не найден</h2><a href="index.html" class="btn-primary" style="margin-top:16px">← В каталог</a></div>';
+    return;
+  }
+  document.title = p.name + ' — Upakovka09';
+
+  var pack = p.packQty || 50;  // шаг количества = в пачке
+  var BLAB = {hit:'Хит продаж',new:'Новинка',eco:'Эко',sale:'Скидка'};
+  var BCLS = {hit:'badge-hit',new:'badge-new',eco:'badge-eco',sale:'badge-sale'};
+
+  // breadcrumb
+  var catLabel = getCatLabel(p.cat, p.subCat);
+  document.getElementById('bc').innerHTML =
+    '<div class="breadcrumb"><a href="index.html">Главная</a> › <a href="index.html#catalog">'+catLabel+'</a> › '+p.name+'</div>';
+
+  var discounts=[
+    {label:'1–'+( pack-1)+' шт',  mult:1.33},
+    {label:pack+'–'+(pack*10-1)+' шт', mult:1},
+    {label:pack*10+'–'+(pack*20-1)+' шт', mult:0.76},
+    {label:'от '+(pack*20)+' шт', mult:0.59}
+  ];
+
+  var photo = getPhoto(p.id);
+  var mainImgHtml = photo
+    ? '<img src="'+photo+'" id="main-img-el" alt="'+p.name+'">'
+    : '<span id="main-img-el" style="font-size:110px;line-height:1">'+p.emoji+'</span>';
+
+  document.getElementById('pw').innerHTML =
+    '<div class="product-page-wrap">'+
+      '<div class="gallery">'+
+        '<div class="main-img" id="main-img">'+mainImgHtml+'</div>'+
+        '<div class="thumbs">'+
+          '<div class="thumb active" onclick="setThumb(this,\''+encodeURIComponent(photo||'')+'\',\''+p.emoji+'\')">'+
+            (photo?'<img src="'+photo+'" alt="">':p.emoji)+
+          '</div>'+
+          '<div class="thumb" onclick="setThumb(this,\'\',\'📷\')">📷</div>'+
+          '<div class="thumb" onclick="setThumb(this,\'\',\'📐\')">📐</div>'+
+        '</div>'+
+      '</div>'+
+
+      '<div class="pinfo">'+
+        (p.badge?'<span class="pbadge '+BCLS[p.badge]+'">'+BLAB[p.badge]+'</span>':'')+
+        '<h1 class="ptitle">'+p.name+'</h1>'+
+        '<div class="pmeta">'+p.meta+'</div>'+
+        '<div class="prating">★★★★★ <span>4.8 · 142 отзыва · Арт. UP-00'+p.id+'</span></div>'+
+
+        // БЛОК УПАКОВКИ
+        '<div class="pack-info-box">'+
+          '<div class="pack-info-row">'+
+            '<span class="pack-info-icon">📦</span>'+
+            '<div>'+
+              '<div class="pack-info-title">В одной упаковке: <strong>'+pack+' шт.</strong></div>'+
+              '<div class="pack-info-sub">Заказ кратно '+pack+' шт · Цена за 1 штуку</div>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+
+        '<div class="pricebox">'+
+          '<div class="price-main" id="price-display">'+p.price.toFixed(2)+' ₽</div>'+
+          (p.oldPrice?'<div class="price-old">'+p.oldPrice.toFixed(2)+' ₽</div>':'')+
+          '<div class="price-per">за 1 штуку</div>'+
+          '<div class="price-total">Итого: <strong id="total-display">'+(p.price*pack).toFixed(2)+'</strong> ₽ за <strong id="qty-display">'+pack+'</strong> шт.</div>'+
+        '</div>'+
+
+        // СЧЁТЧИК
+        '<div class="qty-section">'+
+          '<div class="qty-section-label">Количество</div>'+
+          '<div class="qty-row">'+
+            '<div class="qty-ctrl">'+
+              '<button onclick="chQty(-1)" id="qty-minus">−</button>'+
+              '<input type="number" id="qty-input" value="'+pack+'" min="'+pack+'" step="'+pack+'"'+
+                ' onchange="setQtyDirect(parseInt(this.value)||'+pack+')" onblur="setQtyDirect(parseInt(this.value)||'+pack+')" />'+
+              '<button onclick="chQty(1)">+</button>'+
+            '</div>'+
+            '<span class="qty-hint">Мин. '+pack+' шт. · шаг '+pack+' шт.</span>'+
+          '</div>'+
+          '<div class="qty-packs" id="qty-packs">= 1 упаковка</div>'+
+        '</div>'+
+
+        '<div class="field-label" style="margin-top:4px">Оптовые скидки</div>'+
+        '<table class="disc-table">'+
+          '<thead><tr><th>Количество</th><th>Цена / шт.</th><th>Скидка</th></tr></thead><tbody>'+
+          discounts.map(function(d,i){
+            return '<tr class="'+(i===1?'disc-active':'')+'" id="dr-'+i+'">'+
+              '<td>'+d.label+'</td>'+
+              '<td>'+(p.price*d.mult).toFixed(2)+' ₽</td>'+
+              '<td>'+(d.mult<1?'−'+Math.round((1-d.mult)*100)+'%':'—')+'</td>'+
+            '</tr>';
+          }).join('')+
+          '</tbody></table>'+
+
+        '<div class="btn-row">'+
+          '<button class="btn-primary btn-big" id="add-btn" onclick="doAdd()">🛒 В корзину</button>'+
+          '<button class="btn-wish" id="wish-btn" onclick="this.classList.toggle(\'wished\');this.textContent=this.classList.contains(\'wished\')?\'♥\':\'♡\'">♡</button>'+
+        '</div>'+
+        '<div class="pfeatures"><span>🚚 Доставка 1–2 дня</span><span>📄 Счёт для юрлиц</span><span>↩️ Возврат 14 дней</span></div>'+
+      '</div>'+
+    '</div>';
+
+  document.getElementById('sw').innerHTML =
+    '<div class="specs-section">'+
+      '<h2 class="section-title">Характеристики</h2>'+
+      '<div class="specs-grid">'+
+        '<div class="spec"><div class="spec-l">Материал</div><div class="spec-v">'+p.material+'</div></div>'+
+        '<div class="spec"><div class="spec-l">Объём</div><div class="spec-v">'+p.volume+'</div></div>'+
+        '<div class="spec"><div class="spec-l">Размер</div><div class="spec-v">'+p.size+'</div></div>'+
+        '<div class="spec"><div class="spec-l">В упаковке</div><div class="spec-v">'+pack+' шт.</div></div>'+
+        '<div class="spec"><div class="spec-l">Горячее</div><div class="spec-v">до +120°C</div></div>'+
+        '<div class="spec"><div class="spec-l">Заморозка</div><div class="spec-v">до −40°C</div></div>'+
+      '</div>'+
+    '</div>';
+
+  // Похожие
+  var rel = getProducts().filter(function(x){ return x.cat===p.cat && x.id!==p.id; }).slice(0,4);
+  if(rel.length){
+    document.getElementById('rw').innerHTML=
+      '<div class="section"><h2 class="section-title">Похожие товары</h2>'+
+      '<div class="products-grid" style="max-width:1100px;margin:0 auto">'+
+      rel.map(function(r){
+        var rp=getPhoto(r.id);
+        var ri=rp?'<img src="'+rp+'" alt="'+r.name+'">'
+          :'<div class="card-emoji">'+r.emoji+'</div>';
+        var packR=r.packQty||50;
+        return '<div class="product-card" onclick="location.href=\'product.html?id='+r.id+'\'">'+
+          '<div class="product-img">'+ri+'</div>'+
+          '<div class="product-info">'+
+            '<div class="product-name">'+r.name+'</div>'+
+            '<div class="product-meta">'+r.meta+'</div>'+
+            '<div class="product-pack">В пачке: <b>'+packR+' шт.</b></div>'+
+            '<div class="product-price-row"><div class="product-price">'+r.price.toFixed(2)+' ₽</div></div>'+
+            '<button class="add-cart-btn" onclick="event.stopPropagation();addToCart('+r.id+','+packR+');this.textContent=\'✓ Добавлено\';this.classList.add(\'added\');var _b=this;setTimeout(function(){_b.textContent=\'+ В корзину\';_b.classList.remove(\'added\');},1600)">+ В корзину</button>'+
+          '</div></div>';
+      }).join('')+
+      '</div></div>';
+  }
+
+  // ── логика счётчика ──────────────────────────────
+  var qty = pack;
+
+  window.setThumb = function(el, src, emoji){
+    document.querySelectorAll('.thumb').forEach(function(t){t.classList.remove('active');});
+    el.classList.add('active');
+    var mi = document.getElementById('main-img');
+    var decoded = decodeURIComponent(src);
+    if(decoded){ mi.innerHTML='<img src="'+decoded+'" alt="">'; }
+    else { mi.innerHTML='<span style="font-size:110px;line-height:1">'+emoji+'</span>'; }
+  };
+
+  function getDiscount(q){
+    if(q < pack)    return 0;
+    if(q < pack*10) return 1;
+    if(q < pack*20) return 2;
+    return 3;
+  }
+
+  function applyQty(q){
+    qty = Math.max(pack, Math.round(q / pack) * pack); // округляем до кратного pack
+    document.getElementById('qty-input').value = qty;
+    document.getElementById('qty-display').textContent = qty;
+    // пачки
+    var packs = qty / pack;
+    var packWord = packs===1?'упаковка':packs<5?'упаковки':'упаковок';
+    document.getElementById('qty-packs').textContent = '= '+packs+' '+packWord;
+    // кнопка − нельзя меньше pack
+    document.getElementById('qty-minus').disabled = (qty <= pack);
+    // скидка
+    var row = getDiscount(qty);
+    var mult = [1.33,1,0.76,0.59][row];
+    var up = p.price * mult;
+    document.getElementById('price-display').textContent = up.toFixed(2)+' ₽';
+    document.getElementById('total-display').textContent = (up*qty).toFixed(2);
+    for(var i=0;i<4;i++){
+      var dr=document.getElementById('dr-'+i);
+      if(dr) dr.classList.toggle('disc-active', i===row);
+    }
+  }
+
+  window.chQty = function(dir){
+    applyQty(qty + dir * pack);
+  };
+  window.setQtyDirect = function(val){
+    applyQty(val);
+  };
+
+  window.doAdd = function(){
+    addToCart(p.id, qty);
+    var btn=document.getElementById('add-btn');
+    btn.innerHTML='✓ Добавлено!';
+    btn.style.background='#16a34a';
+    setTimeout(function(){btn.innerHTML='🛒 В корзину';btn.style.background='';},1800);
+  };
+
+  applyQty(pack); // начальное состояние
+  } // end renderPage
+
+  // Сначала рендерим из кеша (быстро), потом обновляем с сервера
+  renderPage();
+  loadProductsFromServer(function(){ renderPage(); });
+})();
+</script>
+</body>
+</html>
