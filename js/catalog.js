@@ -56,33 +56,43 @@ function renderCatalog(){
   grid.innerHTML = list.map(function(p){
     var photo = getPhoto(p.id);
     var img = photo
-      ? '<img src="'+photo+'" alt="'+p.name+'" loading="lazy">'
-      : '<div class="card-emoji">'+p.emoji+'</div>';
+      ? '<img src="' + photo + '" alt="' + p.name + '" loading="lazy">'
+      : '<div class="card-emoji">' + p.emoji + '</div>';
     var pack = p.packQty || 1;
-    var packInfo = pack > 1 ? '<div class="product-pack">В пачке: <b>'+pack+' шт.</b></div>' : '';
-    return '<div class="product-card" onclick="location.href='product.html?id='+p.id+''">'+
-      '<div class="product-img">'+img+
-        (p.badge ? '<span class="product-badge '+BADGE_CLS[p.badge]+'">'+BADGE_LABEL[p.badge]+'</span>' : '')+
-        (p.oldPrice ? '<span class="product-discount">−'+Math.round((1-p.price/p.oldPrice)*100)+'%</span>' : '')+
-      '</div>'+
-      '<div class="product-info">'+
-        '<div class="product-name">'+p.name+'</div>'+
-        '<div class="product-meta">'+p.meta+'</div>'+
-        packInfo+
-        '<div class="product-price-row">'+
-          '<div class="product-price">'+p.price.toFixed(2)+' ₽</div>'+
-          (p.oldPrice ? '<div class="product-old">'+p.oldPrice.toFixed(2)+' ₽</div>' : '')+
-        '</div>'+
-        '<div class="card-cart-row" onclick="event.stopPropagation()">'+
-          '<div class="card-qty-ctrl">'+
-            '<button onclick="cardQty('+p.id+',-'+pack+')">−</button>'+
-            '<span id="cq-'+p.id+'">'+pack+'</span>'+
-            '<button onclick="cardQty('+p.id+','+pack+')">+</button>'+
-          '</div>'+
-          '<button class="add-cart-btn card-add-btn" id="ca-'+p.id+'" onclick="cardAdd('+p.id+')">В корзину</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>';
+    var packInfo = pack > 1
+      ? '<div class="product-pack">В пачке: <b>' + pack + ' шт.</b></div>'
+      : '';
+    var badge = p.badge
+      ? '<span class="product-badge ' + BADGE_CLS[p.badge] + '">' + BADGE_LABEL[p.badge] + '</span>'
+      : '';
+    var disc = p.oldPrice
+      ? '<span class="product-discount">−' + Math.round((1-p.price/p.oldPrice)*100) + '%</span>'
+      : '';
+    var oldPriceHtml = p.oldPrice
+      ? '<div class="product-old">' + p.oldPrice.toFixed(2) + ' ₽</div>'
+      : '';
+    return [
+      '<div class="product-card" onclick="location.href=\'product.html?id=' + p.id + '\'">',
+        '<div class="product-img">' + img + badge + disc + '</div>',
+        '<div class="product-info">',
+          '<div class="product-name">' + p.name + '</div>',
+          '<div class="product-meta">' + p.meta + '</div>',
+          packInfo,
+          '<div class="product-price-row">',
+            '<div class="product-price">' + p.price.toFixed(2) + ' ₽</div>',
+            oldPriceHtml,
+          '</div>',
+          '<div class="card-cart-row" onclick="event.stopPropagation()">',
+            '<div class="card-qty-ctrl">',
+              '<button onclick="cardQty(' + p.id + ',' + (-pack) + ')">−</button>',
+              '<span id="cq-' + p.id + '">' + pack + '</span>',
+              '<button onclick="cardQty(' + p.id + ',' + pack + ')">+</button>',
+            '</div>',
+            '<button class="add-cart-btn card-add-btn" id="ca-' + p.id + '" onclick="cardAdd(' + p.id + ')">В корзину</button>',
+          '</div>',
+        '</div>',
+      '</div>'
+    ].join('');
   }).join('');
 }
 
