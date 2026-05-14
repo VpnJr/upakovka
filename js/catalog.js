@@ -32,12 +32,13 @@ function getFilteredList(){
 function getCardCartHtml(productId, pack){
   var cart   = getCart();
   var inCart = cart.find(function(i){ return i.id === productId; });
-  var curQty = inCart ? inCart.qty : (window._cardQtys[productId] || pack);
+  // Счётчик показывает сколько добавить, НЕ сколько уже в корзине
+  var addQty = window._cardQtys[productId] || pack;
 
   var ctrl =
     '<div class="card-qty-ctrl">' +
       '<button onclick="cardQty(' + productId + ',' + (-pack) + ')">−</button>' +
-      '<span id="cq-' + productId + '">' + curQty + '</span>' +
+      '<span id="cq-' + productId + '">' + addQty + '</span>' +
       '<button onclick="cardQty(' + productId + ',' + pack + ')">+</button>' +
     '</div>';
 
@@ -119,30 +120,23 @@ window._cardQtys = {};
 function cardQty(id, delta){
   var p    = getProducts().find(function(x){ return x.id === id; });
   var pack = p && p.packQty ? p.packQty : 1;
-  var cart  = getCart();
-  var inCart = cart.find(function(i){ return i.id === id; });
-  // Базовое количество: если в корзине — от него, иначе от выбранного
-  var base = inCart ? inCart.qty : (window._cardQtys[id] || pack);
-  var next = Math.max(pack, base + delta);
+  // Меняем ТОЛЬКО локальный счётчик — корзина не трогается
+  var current = window._cardQtys[id] || pack;
+  var next    = Math.max(pack, current + delta);
   window._cardQtys[id] = next;
-  // Если товар уже в корзине — сразу обновляем корзину и карточку
-  if(inCart){
-    updateCartQty(id, next);
-    var ccr = document.getElementById('ccr-' + id);
-    if(ccr) ccr.innerHTML = getCardCartHtml(id, pack);
-  } else {
-    var el = document.getElementById('cq-' + id);
-    if(el) el.textContent = next;
-  }
+  var el = document.getElementById('cq-' + id);
+  if(el) el.textContent = next;
 }
 
 function cardAdd(id){
   var p    = getProducts().find(function(x){ return x.id === id; });
   var pack = p && p.packQty ? p.packQty : 1;
   var qty  = window._cardQtys[id] || pack;
+  // Добавляем выбранное количество в корзину
   addToCart(id, qty);
-  window._cardQtys[id] = pack; // сброс
-  // Обновить нижнюю часть карточки — покажет «В корзине»
+  // Сбрасываем локальный счётчик на pack
+  window._cardQtys[id] = pack;
+  // Перерисовываем карточку — покажет актуальное «В корзине»
   var ccr = document.getElementById('ccr-' + id);
   if(ccr) ccr.innerHTML = getCardCartHtml(id, pack);
 }
