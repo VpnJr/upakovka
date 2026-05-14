@@ -5,36 +5,55 @@ var BADGE_CLS   = {hit:'badge-hit',  new:'badge-new', eco:'badge-eco', sale:'bad
 
 function getFilteredList(){
   var list = getProducts();
-
   if(catalogState.cat !== 'all')
     list = list.filter(function(p){ return p.cat === catalogState.cat; });
-
   if(catalogState.subCat)
     list = list.filter(function(p){ return p.subCat === catalogState.subCat; });
-
   if(catalogState.search){
     var q = catalogState.search.toLowerCase();
     list = list.filter(function(p){
       return p.name.toLowerCase().indexOf(q) !== -1 || p.meta.toLowerCase().indexOf(q) !== -1;
     });
   }
-
-  // Фильтр цены — только если введено число > 0
   if(catalogState.priceMin !== null && !isNaN(catalogState.priceMin))
     list = list.filter(function(p){ return p.price >= catalogState.priceMin; });
-
   if(catalogState.priceMax !== null && !isNaN(catalogState.priceMax))
     list = list.filter(function(p){ return p.price <= catalogState.priceMax; });
-
   if(catalogState.badges.length)
     list = list.filter(function(p){ return catalogState.badges.indexOf(p.badge) !== -1; });
-
   list = list.slice();
   if(catalogState.sort === 'price_asc')  list.sort(function(a,b){ return a.price - b.price; });
   if(catalogState.sort === 'price_desc') list.sort(function(a,b){ return b.price - a.price; });
   if(catalogState.sort === 'name')       list.sort(function(a,b){ return a.name.localeCompare(b.name,'ru'); });
-
   return list;
+}
+
+// Нижняя часть карточки — зависит от того, есть ли товар в корзине
+function getCardCartHtml(productId, pack){
+  var cart   = getCart();
+  var inCart = cart.find(function(i){ return i.id === productId; });
+  var curQty = inCart ? inCart.qty : (window._cardQtys[productId] || pack);
+
+  var ctrl =
+    '<div class="card-qty-ctrl">' +
+      '<button onclick="cardQty(' + productId + ',' + (-pack) + ')">−</button>' +
+      '<span id="cq-' + productId + '">' + curQty + '</span>' +
+      '<button onclick="cardQty(' + productId + ',' + pack + ')">+</button>' +
+    '</div>';
+
+  if(inCart){
+    return (
+      '<div class="card-in-cart">' +
+        '<span class="card-in-cart-lbl">✓ В корзине: <b>' + inCart.qty + ' шт.</b></span>' +
+        ctrl +
+        '<button class="add-cart-btn card-add-btn card-add-more" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">+ Ещё</button>' +
+      '</div>'
+    );
+  }
+  return (
+    ctrl +
+    '<button class="add-cart-btn card-add-btn" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">В корзину</button>'
+  );
 }
 
 function renderCatalog(){
@@ -71,6 +90,7 @@ function renderCatalog(){
     var oldPriceHtml = p.oldPrice
       ? '<div class="product-old">' + p.oldPrice.toFixed(2) + ' ₽</div>'
       : '';
+
     return [
       '<div class="product-card" onclick="location.href=\'product.html?id=' + p.id + '\'">',
         '<div class="product-img">' + img + badge + disc + '</div>',
@@ -82,13 +102,8 @@ function renderCatalog(){
             '<div class="product-price">' + p.price.toFixed(2) + ' ₽</div>',
             oldPriceHtml,
           '</div>',
-          '<div class="card-cart-row" onclick="event.stopPropagation()">',
-            '<div class="card-qty-ctrl">',
-              '<button onclick="cardQty(' + p.id + ',' + (-pack) + ')">−</button>',
-              '<span id="cq-' + p.id + '">' + pack + '</span>',
-              '<button onclick="cardQty(' + p.id + ',' + pack + ')">+</button>',
-            '</div>',
-            '<button class="add-cart-btn card-add-btn" id="ca-' + p.id + '" onclick="cardAdd(' + p.id + ')">В корзину</button>',
+          '<div class="card-cart-row" onclick="event.stopPropagation()" id="ccr-' + p.id + '">',
+            getCardCartHtml(p.id, pack),
           '</div>',
         '</div>',
       '</div>'
@@ -96,56 +111,60 @@ function renderCatalog(){
   }).join('');
 }
 
-// Глобальное хранилище выбранных количеств на карточках
+// ── Счётчики на карточках ──────────────────────────────
 window._cardQtys = {};
 
 function cardQty(id, delta){
-  var p = getProducts().find(function(x){ return x.id===id; });
-  var pack = (p && p.packQty) ? p.packQty : 1;
-  var current = window._cardQtys[id] || pack;
-  var next = Math.max(pack, current + delta);
+  var p    = getProducts().find(function(x){ return x.id === id; });
+  var pack = p && p.packQty ? p.packQty : 1;
+  var cart  = getCart();
+  var inCart = cart.find(function(i){ return i.id === id; });
+  // Базовое количество: если в корзине — от него, иначе от выбранного
+  var base = inCart ? inCart.qty : (window._cardQtys[id] || pack);
+  var next = Math.max(pack, base + delta);
   window._cardQtys[id] = next;
-  var el = document.getElementById('cq-'+id);
-  if(el) el.textContent = next;
-}
-
-function cardAdd(id){
-  var p = getProducts().find(function(x){ return x.id===id; });
-  var pack = (p && p.packQty) ? p.packQty : 1;
-  var qty = window._cardQtys[id] || pack;
-  addToCart(id, qty);
-  // Сбросить счётчик обратно на pack
-  window._cardQtys[id] = pack;
-  var el = document.getElementById('cq-'+id);
-  if(el) el.textContent = pack;
-  // Анимация кнопки
-  var btn = document.getElementById('ca-'+id);
-  if(btn){
-    btn.textContent = '✓ Добавлено';
-    btn.classList.add('added');
-    setTimeout(function(){ btn.textContent = 'В корзину'; btn.classList.remove('added'); }, 1600);
+  // Если товар уже в корзине — сразу обновляем корзину и карточку
+  if(inCart){
+    updateCartQty(id, next);
+    var ccr = document.getElementById('ccr-' + id);
+    if(ccr) ccr.innerHTML = getCardCartHtml(id, pack);
+  } else {
+    var el = document.getElementById('cq-' + id);
+    if(el) el.textContent = next;
   }
 }
 
-// Устаревший quickAdd — оставлен для совместимости
-function quickAdd(id, btn){
-  var p = getProducts().find(function(x){ return x.id===id; });
-  var qty = (p && p.packQty) ? p.packQty : 1;
+function cardAdd(id){
+  var p    = getProducts().find(function(x){ return x.id === id; });
+  var pack = p && p.packQty ? p.packQty : 1;
+  var qty  = window._cardQtys[id] || pack;
   addToCart(id, qty);
-  if(btn){ btn.textContent='✓ Добавлено'; btn.classList.add('added'); setTimeout(function(){btn.textContent='+ В корзину';btn.classList.remove('added');},1600); }
+  window._cardQtys[id] = pack; // сброс
+  // Обновить нижнюю часть карточки — покажет «В корзине»
+  var ccr = document.getElementById('ccr-' + id);
+  if(ccr) ccr.innerHTML = getCardCartHtml(id, pack);
 }
 
-// ── Фильтр-панель ─────────────────────────────────────────
+// Устаревший quickAdd — для совместимости
+function quickAdd(id, btn){
+  var p   = getProducts().find(function(x){ return x.id === id; });
+  var qty = p && p.packQty ? p.packQty : 1;
+  addToCart(id, qty);
+  var ccr = document.getElementById('ccr-' + id);
+  if(ccr) ccr.innerHTML = getCardCartHtml(id, qty);
+}
+
+// ── Фильтр-панель ─────────────────────────────────────
 function buildFilterPanel(){
-  var cats = getCats();
+  var cats  = getCats();
   var catEl = document.getElementById('fp-cats');
   if(!catEl) return;
   var html = '<button class="cat-btn active" data-cat="all" onclick="setCat(\'all\',\'\',this)">Все товары</button>';
   cats.forEach(function(c){
-    html += '<button class="cat-btn" data-cat="'+c.id+'" onclick="setCat(\''+c.id+'\',\'\',this)">'+c.emoji+' '+c.label+'</button>';
+    html += '<button class="cat-btn" data-cat="' + c.id + '" onclick="setCat(\'' + c.id + '\',\'\',this)">' + c.emoji + ' ' + c.label + '</button>';
     if(c.sub && c.sub.length){
       c.sub.forEach(function(s){
-        html += '<button class="cat-btn sub-btn" data-cat="'+c.id+'" data-sub="'+s.id+'" onclick="setCat(\''+c.id+'\',\''+s.id+'\',this)">└ '+s.label+'</button>';
+        html += '<button class="cat-btn sub-btn" data-cat="' + c.id + '" data-sub="' + s.id + '" onclick="setCat(\'' + c.id + '\',\'' + s.id + '\',this)">└ ' + s.label + '</button>';
       });
     }
   });
@@ -153,7 +172,7 @@ function buildFilterPanel(){
 }
 
 function setCat(cat, subCat, el){
-  catalogState.cat = cat;
+  catalogState.cat    = cat;
   catalogState.subCat = subCat || '';
   document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('active'); });
   if(el) el.classList.add('active');
@@ -200,7 +219,5 @@ function resetFilters(){
 
 window.addEventListener('storage', function(e){
   if(e.key === 'up_products' || e.key === 'up_cats'){ buildFilterPanel(); renderCatalog(); }
+  if(e.key === 'up_cart'){ renderCatalog(); }
 });
-
-// Вызывается из index.html после загрузки свежих данных с сервера
-// function loadProductsFromServer определена в data.js
