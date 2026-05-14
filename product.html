@@ -123,7 +123,7 @@
           (p.badge ? '<span class="pbadge '+BCLS[p.badge]+'">'+BLAB[p.badge]+'</span>' : '')+
           '<h1 class="ptitle">'+p.name+'</h1>'+
           '<div class="pmeta">'+p.meta+'</div>'+
-          '<div class="prating">★★★★★ <span>4.8 · 142 отзыва · Арт. UP-00'+p.id+'</span></div>'+
+          (p.sku ? '<div class="p-sku">Арт. '+p.sku+'</div>' : '')+
 
           '<div class="pack-info-box">'+
             '<div class="pack-info-row">'+
@@ -161,11 +161,6 @@
           '<div class="btn-row">'+
             '<button class="btn-primary btn-big" id="add-btn" onclick="doAdd()">🛒 В корзину</button>'+
             '<button class="btn-wish" id="wish-btn" onclick="this.classList.toggle(\'wished\');this.textContent=this.classList.contains(\'wished\')?\'♥\':\'♡\'">♡</button>'+
-          '</div>'+
-          '<div class="pfeatures">'+
-            '<span>🚚 Доставка 1–2 дня</span>'+
-            '<span>📄 Счёт для юрлиц</span>'+
-            '<span>↩️ Возврат 14 дней</span>'+
           '</div>'+
         '</div>'+
 

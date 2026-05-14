@@ -31,24 +31,22 @@ function getCartTotal(){
 function getCartCount(){ return getCart().reduce(function(s,i){return s+i.qty;},0); }
 
 function refreshCartUI(){
-  var count = getCartCount();
+  var cart  = getCart();
+  var kinds = cart.length;          // кол-во видов товаров (уникальных позиций)
   var total = getCartTotal();
-  // Бейджи с количеством (в шапке других страниц)
-  document.querySelectorAll('.cart-count-badge').forEach(function(el){el.textContent=count;});
-  // Кнопка корзины — показывает кол-во и сумму
+  // Бейджи на других страницах
+  document.querySelectorAll('.cart-count-badge').forEach(function(el){el.textContent=kinds||'';});
+  // Главная кнопка корзины
   var label = document.getElementById('cart-label');
   if(label){
-    if(count > 0){
-      label.innerHTML = count + ' шт. &nbsp;·&nbsp; <strong>' + total.toFixed(0) + ' ₽</strong>';
+    if(kinds > 0){
+      label.innerHTML =
+        '<span class="cart-kinds">' + kinds + ' ' + (kinds===1?'товар':kinds<5?'товара':'товаров') + '</span>' +
+        '<span class="cart-divider"> · </span>' +
+        '<span class="cart-total-val">' + total.toFixed(0) + ' ₽</span>';
     } else {
       label.textContent = 'Корзина';
     }
-  }
-  // Старый элемент суммы (если есть на других страницах)
-  var sumEl = document.getElementById('cart-sum');
-  if(sumEl){
-    sumEl.textContent = total > 0 ? '· ' + total.toFixed(0) + ' ₽' : '';
-    sumEl.style.display = total > 0 ? 'inline' : 'none';
   }
   renderCartDrawer();
 }

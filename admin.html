@@ -402,6 +402,7 @@ input[type=file]{display:none}
         </div>
       </div>
       <div class="fg"><label>Название *</label><input id="m-name" type="text" placeholder="Контейнер 500мл"/></div>
+      <div class="fg"><label>Артикул (SKU)</label><input id="m-sku" type="text" placeholder="UP-001"/></div>
       <div class="fg"><label>Описание</label><input id="m-meta" type="text" placeholder="Полипропилен PP, с крышкой"/></div>
       <div class="frow">
         <div class="fg"><label>Категория</label><select id="m-cat" onchange="buildSubSel(this.value,'')"></select></div>
@@ -884,6 +885,7 @@ function openProdModal(id){
   setVal('m-emoji',p?p.emoji:'📦');
   setVal('m-badge',p?p.badge||'':'');
   setVal('m-name',p?p.name:'');
+  setVal('m-sku',p?p.sku||'':'');
   setVal('m-meta',p?p.meta:'');
   setVal('m-price',p?p.price:'');
   setVal('m-oldprice',p&&p.oldPrice?p.oldPrice:'');
@@ -943,7 +945,7 @@ function saveProd(){
     var prod={
       id:editId||nextId(),
       emoji:getVal('m-emoji')||'📦',
-      name:name, meta:getVal('m-meta').trim(),
+      name:name, sku:getVal('m-sku').trim(), meta:getVal('m-meta').trim(),
       price:parseFloat(price),
       oldPrice:getVal('m-oldprice')?parseFloat(getVal('m-oldprice')):null,
       cat:getVal('m-cat'), subCat:getVal('m-sub')||'',
