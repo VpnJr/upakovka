@@ -42,13 +42,13 @@ function getCardCartHtml(productId, pack){
     '</div>';
 
   if(inCart){
-    // Строка 1: счётчик [−][X][+]
-    // Строка 2: кнопка "+ Ещё" на всю ширину
-    // Строка 3: зелёная надпись "В корзине: X шт."
+    // Строка 1: зелёная надпись
+    // Строка 2: счётчик [−][X][+]
+    // Строка 3: кнопка "+ Ещё"
     return (
+      '<span class="card-in-cart-lbl">✓ В корзине: <b>' + inCart.qty + ' шт.</b></span>' +
       ctrl +
-      '<button class="add-cart-btn card-add-full card-add-more" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">+ Ещё</button>' +
-      '<span class="card-in-cart-lbl">✓ В корзине: <b>' + inCart.qty + ' шт.</b></span>'
+      '<button class="add-cart-btn card-add-full card-add-more" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">+ Ещё</button>'
     );
   }
   // Обычный вид: счётчик [−][X][+], под ним кнопка "В корзину" на всю ширину

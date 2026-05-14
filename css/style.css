@@ -296,10 +296,10 @@ a{color:inherit;text-decoration:none}
 
 /* ── СЧЁТЧИК НА КАРТОЧКЕ КАТАЛОГА ── */
 .card-cart-row{margin-top:auto;padding-top:10px;display:flex;flex-direction:column;gap:8px}
-.card-qty-ctrl{display:flex;align-items:stretch;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;width:100%}
-.card-qty-ctrl button{background:var(--gray);border:none;width:44px;height:38px;font-size:18px;cursor:pointer;font-family:inherit;transition:background .15s;flex-shrink:0}
+.card-qty-ctrl{display:flex;align-items:stretch;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;width:100%;height:24px}
+.card-qty-ctrl button{background:var(--gray);border:none;width:32px;height:24px;font-size:13px;cursor:pointer;font-family:inherit;transition:background .15s;flex-shrink:0}
 .card-qty-ctrl button:hover{background:var(--brand-bg);color:var(--brand)}
-.card-qty-ctrl span{flex:1;text-align:center;font-size:14px;font-weight:600;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);display:flex;align-items:center;justify-content:center}
+.card-qty-ctrl span{flex:1;text-align:center;font-size:12px;font-weight:600;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;height:24px}
 .card-add-btn{flex:1;height:40px;font-size:13px;font-weight:600;padding:0 8px;min-width:0}
 .card-add-full{width:100%;height:42px;font-size:14px;font-weight:600;padding:0;border-radius:var(--r)}
 
