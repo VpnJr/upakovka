@@ -34,7 +34,6 @@ function getCardCartHtml(productId, pack){
   var inCart = cart.find(function(i){ return i.id === productId; });
   var curQty = inCart ? inCart.qty : (window._cardQtys[productId] || pack);
 
-  // Счётчик +/−
   var ctrl =
     '<div class="card-qty-ctrl">' +
       '<button onclick="cardQty(' + productId + ',' + (-pack) + ')">−</button>' +
@@ -43,21 +42,20 @@ function getCardCartHtml(productId, pack){
     '</div>';
 
   if(inCart){
-    // Товар в корзине: зелёная надпись, потом строка счётчик + кнопка
+    // Строка 1: счётчик + кнопка "+ Ещё"
+    // Строка 2: зелёная надпись "В корзине: X шт."
     return (
-      '<span class="card-in-cart-lbl">✓ В корзине: <b>' + inCart.qty + ' шт.</b></span>' +
       '<div class="card-ctrl-row">' +
         ctrl +
         '<button class="add-cart-btn card-add-btn card-add-more" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">+ Ещё</button>' +
-      '</div>'
+      '</div>' +
+      '<span class="card-in-cart-lbl">✓ В корзине: <b>' + inCart.qty + ' шт.</b></span>'
     );
   }
-  // Обычный вид: счётчик + кнопка в одну строку
+  // Обычный вид: счётчик на всю ширину, кнопка под ним на всю ширину
   return (
-    '<div class="card-ctrl-row">' +
-      ctrl +
-      '<button class="add-cart-btn card-add-btn" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">В корзину</button>' +
-    '</div>'
+    '<div class="card-ctrl-row">' + ctrl + '</div>' +
+    '<button class="add-cart-btn card-add-full" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">В корзину</button>'
   );
 }
 
