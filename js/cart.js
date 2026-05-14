@@ -33,16 +33,22 @@ function getCartCount(){ return getCart().reduce(function(s,i){return s+i.qty;},
 function refreshCartUI(){
   var count = getCartCount();
   var total = getCartTotal();
+  // Бейджи с количеством (в шапке других страниц)
   document.querySelectorAll('.cart-count-badge').forEach(function(el){el.textContent=count;});
-  // Показываем сумму в кнопке корзины
+  // Кнопка корзины — показывает кол-во и сумму
+  var label = document.getElementById('cart-label');
+  if(label){
+    if(count > 0){
+      label.innerHTML = count + ' шт. &nbsp;·&nbsp; <strong>' + total.toFixed(0) + ' ₽</strong>';
+    } else {
+      label.textContent = 'Корзина';
+    }
+  }
+  // Старый элемент суммы (если есть на других страницах)
   var sumEl = document.getElementById('cart-sum');
   if(sumEl){
-    if(total > 0){
-      sumEl.textContent = '· ' + total.toFixed(0) + ' ₽';
-      sumEl.style.display = 'inline';
-    } else {
-      sumEl.style.display = 'none';
-    }
+    sumEl.textContent = total > 0 ? '· ' + total.toFixed(0) + ' ₽' : '';
+    sumEl.style.display = total > 0 ? 'inline' : 'none';
   }
   renderCartDrawer();
 }

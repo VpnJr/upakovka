@@ -313,3 +313,12 @@ a{color:inherit;text-decoration:none}
 
 /* ── СУММА В КНОПКЕ КОРЗИНЫ ── */
 .cart-sum-badge{font-size:12px;font-weight:600;opacity:.9;display:none}
+
+/* ── ТОП-БАР С КОНТАКТАМИ ── */
+.topbar-contacts{background:var(--brand-d);padding:7px 1.5rem;font-size:12px}
+.topbar-contacts-inner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;max-width:1400px;margin:0 auto}
+.tbc-item{color:rgba(255,255,255,.8);text-decoration:none;transition:color .15s;white-space:nowrap}
+.tbc-item:hover{color:#fff}
+.tbc-sep{color:rgba(255,255,255,.3);flex-shrink:0}
+/* Шапка теперь не sticky — топ-бар над ней */
+.header{position:sticky;top:0}
