@@ -42,19 +42,18 @@ function getCardCartHtml(productId, pack){
     '</div>';
 
   if(inCart){
-    // Строка 1: счётчик + кнопка "+ Ещё"
-    // Строка 2: зелёная надпись "В корзине: X шт."
+    // Строка 1: счётчик [−][X][+]
+    // Строка 2: кнопка "+ Ещё" на всю ширину
+    // Строка 3: зелёная надпись "В корзине: X шт."
     return (
-      '<div class="card-ctrl-row">' +
-        ctrl +
-        '<button class="add-cart-btn card-add-btn card-add-more" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">+ Ещё</button>' +
-      '</div>' +
+      ctrl +
+      '<button class="add-cart-btn card-add-full card-add-more" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">+ Ещё</button>' +
       '<span class="card-in-cart-lbl">✓ В корзине: <b>' + inCart.qty + ' шт.</b></span>'
     );
   }
-  // Обычный вид: счётчик на всю ширину, кнопка под ним на всю ширину
+  // Обычный вид: счётчик [−][X][+], под ним кнопка "В корзину" на всю ширину
   return (
-    '<div class="card-ctrl-row">' + ctrl + '</div>' +
+    ctrl +
     '<button class="add-cart-btn card-add-full" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">В корзину</button>'
   );
 }

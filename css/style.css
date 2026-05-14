@@ -295,13 +295,13 @@ a{color:inherit;text-decoration:none}
 .sub-btn{padding-left:22px!important;font-size:12px!important;color:#374151}
 
 /* ── СЧЁТЧИК НА КАРТОЧКЕ КАТАЛОГА ── */
-.card-cart-row{margin-top:auto;padding-top:10px;display:flex;flex-direction:column;gap:6px}
-.card-qty-ctrl{display:flex;align-items:stretch;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;flex-shrink:0}
-.card-qty-ctrl button{background:var(--gray);border:none;width:40px;height:40px;font-size:16px;cursor:pointer;font-family:inherit;transition:background .15s;flex-shrink:0}
+.card-cart-row{margin-top:auto;padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.card-qty-ctrl{display:flex;align-items:stretch;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;width:100%}
+.card-qty-ctrl button{background:var(--gray);border:none;width:44px;height:38px;font-size:18px;cursor:pointer;font-family:inherit;transition:background .15s;flex-shrink:0}
 .card-qty-ctrl button:hover{background:var(--brand-bg);color:var(--brand)}
-.card-qty-ctrl span{flex:1;text-align:center;font-size:13px;font-weight:600;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);padding:0 6px}
+.card-qty-ctrl span{flex:1;text-align:center;font-size:14px;font-weight:600;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);display:flex;align-items:center;justify-content:center}
 .card-add-btn{flex:1;height:40px;font-size:13px;font-weight:600;padding:0 8px;min-width:0}
-.card-add-full{width:100%;height:44px;font-size:14px;font-weight:600;padding:0}
+.card-add-full{width:100%;height:42px;font-size:14px;font-weight:600;padding:0;border-radius:var(--r)}
 
 /* ── КОНТАКТЫ ── */
 .contacts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
@@ -341,7 +341,6 @@ a{color:inherit;text-decoration:none}
 
 /* ── КАРТОЧКА: В КОРЗИНЕ ── */
 .card-in-cart{display:flex;flex-direction:column;gap:6px;width:100%}.card-ctrl-row{display:flex;gap:6px;align-items:stretch;width:100%}
-.card-in-cart-lbl{font-size:12px;color:#16a34a;font-weight:500}
+.card-in-cart-lbl{font-size:12px;color:#16a34a;font-weight:600;text-align:center}
 .card-in-cart-lbl b{color:#166534}
-.card-add-more{background:#16a34a;flex-shrink:0;padding:0 14px;min-width:70px}
-.card-add-more:hover{background:#15803d}
+.card-add-more{background:#16a34a}.card-add-more:hover{background:#15803d}
