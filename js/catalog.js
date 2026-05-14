@@ -34,6 +34,7 @@ function getCardCartHtml(productId, pack){
   var inCart = cart.find(function(i){ return i.id === productId; });
   var curQty = inCart ? inCart.qty : (window._cardQtys[productId] || pack);
 
+  // Счётчик +/−
   var ctrl =
     '<div class="card-qty-ctrl">' +
       '<button onclick="cardQty(' + productId + ',' + (-pack) + ')">−</button>' +
@@ -42,17 +43,21 @@ function getCardCartHtml(productId, pack){
     '</div>';
 
   if(inCart){
+    // Товар в корзине: зелёная надпись, потом строка счётчик + кнопка
     return (
-      '<div class="card-in-cart">' +
-        '<span class="card-in-cart-lbl">✓ В корзине: <b>' + inCart.qty + ' шт.</b></span>' +
+      '<span class="card-in-cart-lbl">✓ В корзине: <b>' + inCart.qty + ' шт.</b></span>' +
+      '<div class="card-ctrl-row">' +
         ctrl +
         '<button class="add-cart-btn card-add-btn card-add-more" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">+ Ещё</button>' +
       '</div>'
     );
   }
+  // Обычный вид: счётчик + кнопка в одну строку
   return (
-    ctrl +
-    '<button class="add-cart-btn card-add-btn" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">В корзину</button>'
+    '<div class="card-ctrl-row">' +
+      ctrl +
+      '<button class="add-cart-btn card-add-btn" id="ca-' + productId + '" onclick="cardAdd(' + productId + ')">В корзину</button>' +
+    '</div>'
   );
 }
 

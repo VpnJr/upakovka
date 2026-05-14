@@ -7,15 +7,15 @@ a{color:inherit;text-decoration:none}
 }
 
 /* HEADER */
-.header{background:var(--brand);color:#fff;padding:0 1.5rem;height:60px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.header{background:var(--brand);color:#fff;padding:0 1.5rem;height:60px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;justify-content:space-between}
 .logo{font-size:20px;font-weight:600;color:#fff;white-space:nowrap;flex-shrink:0}
 .logo span{opacity:.55;font-weight:400}
-.header-search{flex:1;max-width:420px;position:relative}
+.header-search{flex:1;min-width:0;max-width:420px;position:relative}
 .header-search .hs-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
 .header-search input{width:100%;padding:8px 12px 8px 34px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);border-radius:20px;color:#fff;font-size:13px;outline:none;font-family:inherit;transition:all .15s}
 .header-search input::placeholder{color:rgba(255,255,255,.6)}
 .header-search input:focus{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.5)}
-.header-right{display:flex;align-items:center;gap:12px;margin-left:auto;flex-shrink:0}
+.header-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
 .header-link{color:rgba(255,255,255,.8);font-size:13px;transition:color .15s}
 .header-link:hover{color:#fff}
 .back-link{color:rgba(255,255,255,.8);font-size:13px}
@@ -295,12 +295,12 @@ a{color:inherit;text-decoration:none}
 .sub-btn{padding-left:22px!important;font-size:12px!important;color:#374151}
 
 /* ── СЧЁТЧИК НА КАРТОЧКЕ КАТАЛОГА ── */
-.card-cart-row{display:flex;gap:6px;align-items:center;margin-top:8px}
-.card-qty-ctrl{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;flex-shrink:0}
-.card-qty-ctrl button{background:var(--gray);border:none;width:28px;height:28px;font-size:16px;cursor:pointer;font-family:inherit;transition:background .15s;line-height:1}
+.card-cart-row{margin-top:8px;display:flex;flex-direction:column;gap:5px;min-height:39px}
+.card-qty-ctrl{display:flex;align-items:stretch;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;flex-shrink:0}
+.card-qty-ctrl button{background:var(--gray);border:none;width:34px;height:34px;font-size:16px;cursor:pointer;font-family:inherit;transition:background .15s;flex-shrink:0}
 .card-qty-ctrl button:hover{background:var(--brand-bg);color:var(--brand)}
-.card-qty-ctrl span{min-width:36px;text-align:center;font-size:13px;font-weight:600;padding:4px 4px;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border)}
-.card-add-btn{flex:1;padding:6px 8px;font-size:12px}
+.card-qty-ctrl span{flex:1;text-align:center;font-size:13px;font-weight:600;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);padding:0 6px}
+.card-add-btn{flex:1;height:34px;font-size:13px;padding:0 8px;min-width:0}
 
 /* ── КОНТАКТЫ ── */
 .contacts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
@@ -332,15 +332,14 @@ a{color:inherit;text-decoration:none}
 .p-sku{font-size:12px;color:var(--muted);margin-bottom:4px}
 
 /* ── КОНТАКТЫ В ШАПКЕ ── */
-.header-contacts{display:flex;align-items:center;gap:14px;flex-shrink:0;margin-left:auto;margin-right:16px}
+.header-contacts{display:flex;align-items:center;gap:14px;flex-shrink:0}
 .hc-item{color:rgba(255,255,255,.8);font-size:12px;text-decoration:none;white-space:nowrap;transition:color .15s}
 .hc-item:hover{color:#fff}
 .hc-time{color:rgba(255,255,255,.65)}
 @media(max-width:900px){.header-contacts{display:none}}
 
 /* ── КАРТОЧКА: В КОРЗИНЕ ── */
-.card-in-cart{display:flex;flex-direction:column;gap:6px;width:100%}
+.card-in-cart{display:flex;flex-direction:column;gap:5px;width:100%}.card-ctrl-row{display:flex;gap:6px;align-items:stretch;width:100%}
 .card-in-cart-lbl{font-size:12px;color:#16a34a;font-weight:500}
 .card-in-cart-lbl b{color:#166534}
-.card-add-more{background:#16a34a!important;font-size:12px!important;padding:6px!important}
-.card-add-more:hover{background:#15803d!important}
+.card-add-more{background:#16a34a;width:auto;flex-shrink:0;padding:0 12px}
