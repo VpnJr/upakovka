@@ -193,6 +193,10 @@ input[type=file]{display:none}
 .ph-thumb-del{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
 .ph-thumb-del:hover{background:rgba(180,0,0,.8)}
 .ph-thumb-main{position:absolute;bottom:3px;left:3px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px;font-weight:600}
+.custom-spec-row{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px}
+.custom-spec-row input{padding:7px 10px;border:1.5px solid var(--bor);border-radius:var(--r);font-size:12px;outline:none;font-family:inherit;transition:border-color .15s}
+.custom-spec-row input:focus{border-color:var(--br)}
+.custom-spec-del{background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r);padding:6px 10px;cursor:pointer;color:#b91c1c;font-size:13px;flex-shrink:0}
 
 /* ── FORM FIELDS ── */
 .fg{display:flex;flex-direction:column;gap:5px}
@@ -418,6 +422,11 @@ input[type=file]{display:none}
         <div class="fg"><label>Объём</label><input id="m-vol" type="text" placeholder="500 мл"/></div>
       </div>
       <div class="fg"><label>Размер</label><input id="m-size" type="text" placeholder="18×13×5 см"/></div>
+      <div class="fg">
+        <label>Дополнительные характеристики</label>
+        <div id="custom-specs"></div>
+        <button type="button" onclick="addCustomSpec()" style="margin-top:6px;background:none;border:1.5px dashed var(--bor);border-radius:var(--r);padding:7px 14px;font-size:12px;color:var(--mut);cursor:pointer;font-family:inherit;width:100%;transition:all .15s" onmouseover="this.style.borderColor='var(--br)';this.style.color='var(--br)'" onmouseout="this.style.borderColor='var(--bor)';this.style.color='var(--mut)'">+ Добавить характеристику</button>
+      </div>
     </div>
     <div class="mftr">
       <button class="btn bo" onclick="closeProdModal()">Отмена</button>
@@ -843,6 +852,31 @@ function saveToFirebase(products){
 // ════════════════════════════════════════════════════════
 //  МОДАЛКА ТОВАРА
 // ════════════════════════════════════════════════════════
+// ── Кастомные характеристики ──────────────────────────
+function addCustomSpec(name, val){
+  var wrap = document.getElementById('custom-specs');
+  if(!wrap) return;
+  var row = document.createElement('div');
+  row.className = 'custom-spec-row';
+  row.innerHTML =
+    '<input type="text" placeholder="Название (напр. Цвет)" value="'+(name||'')+'">' +
+    '<input type="text" placeholder="Значение (напр. Белый)" value="'+(val||'')+'">' +
+    '<button class="custom-spec-del" type="button" onclick="this.parentNode.remove()" title="Удалить">✕</button>';
+  wrap.appendChild(row);
+}
+
+function getCustomSpecs(){
+  var rows = document.querySelectorAll('#custom-specs .custom-spec-row');
+  var result = [];
+  rows.forEach(function(row){
+    var inputs = row.querySelectorAll('input');
+    var l = inputs[0] ? inputs[0].value.trim() : '';
+    var v = inputs[1] ? inputs[1].value.trim() : '';
+    if(l && v) result.push({l:l, v:v});
+  });
+  return result;
+}
+
 function openProdModal(id){
   editId=id||null; photoState=null;
   var p=id?getProducts().find(function(x){return x.id===id;}):null;
@@ -863,6 +897,12 @@ function openProdModal(id){
   photosState = existingPhotos.map(function(ph){
     return typeof ph === 'string' ? {url:ph} : {url:ph.url||ph};
   }).filter(function(ph){ return ph.url; });
+  // Кастомные характеристики
+  var customWrap = document.getElementById('custom-specs');
+  if(customWrap) customWrap.innerHTML = '';
+  if(p && p.specs && Array.isArray(p.specs)){
+    p.specs.forEach(function(s){ addCustomSpec(s.l, s.v); });
+  }
   document.getElementById('ph-file').value='';
   setPhStatus('','');
   renderPhGrid();
@@ -912,6 +952,7 @@ function saveProd(){
       material:getVal('m-mat').trim()||'—',
       volume:getVal('m-vol').trim()||'—',
       size:getVal('m-size').trim()||'—',
+      specs:  getCustomSpecs(),
       photo:  urls[0] || '',       // первое фото — главное
       photos: urls,                 // все фото
     };

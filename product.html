@@ -92,14 +92,6 @@
       '</div>';
     }
 
-    // Скидки
-    var discounts = [
-      {label:'1–'+(pack-1)+' шт',             mult:1.33},
-      {label:pack+'–'+(pack*10-1)+' шт',       mult:1},
-      {label:pack*10+'–'+(pack*20-1)+' шт',    mult:0.76},
-      {label:'от '+(pack*20)+' шт',             mult:0.59},
-    ];
-
     // ── Хлебные крошки ───────────────────────────────────────
     document.getElementById('bc').innerHTML =
       '<div class="breadcrumb">'+
@@ -155,19 +147,6 @@
             '<div class="qty-packs" id="qty-packs">= 1 упаковка</div>'+
           '</div>'+
 
-          '<div class="field-label">Оптовые скидки</div>'+
-          '<table class="disc-table">'+
-            '<thead><tr><th>Количество</th><th>Цена / шт.</th><th>Скидка</th></tr></thead>'+
-            '<tbody>'+
-              discounts.map(function(d,i){
-                return '<tr class="'+(i===1?'disc-active':'')+'" id="dr-'+i+'">'+
-                  '<td>'+d.label+'</td>'+
-                  '<td>'+(p.price*d.mult).toFixed(2)+' ₽</td>'+
-                  '<td>'+(d.mult<1 ? '−'+Math.round((1-d.mult)*100)+'%' : '—')+'</td>'+
-                '</tr>';
-              }).join('')+
-            '</tbody>'+
-          '</table>'+
 
           '<div class="btn-row">'+
             '<button class="btn-primary btn-big" id="add-btn" onclick="doAdd()">🛒 В корзину</button>'+
@@ -182,19 +161,23 @@
 
       '</div>';
 
-    // ── Характеристики ───────────────────────────────────────
-    document.getElementById('sw').innerHTML =
-      '<div class="specs-section">'+
-        '<h2 class="section-title">Характеристики</h2>'+
-        '<div class="specs-grid">'+
-          '<div class="spec"><div class="spec-l">Материал</div><div class="spec-v">'+p.material+'</div></div>'+
-          '<div class="spec"><div class="spec-l">Объём</div><div class="spec-v">'+p.volume+'</div></div>'+
-          '<div class="spec"><div class="spec-l">Размер</div><div class="spec-v">'+p.size+'</div></div>'+
-          '<div class="spec"><div class="spec-l">В упаковке</div><div class="spec-v">'+pack+' шт.</div></div>'+
-          '<div class="spec"><div class="spec-l">Горячее</div><div class="spec-v">до +120°C</div></div>'+
-          '<div class="spec"><div class="spec-l">Заморозка</div><div class="spec-v">до −40°C</div></div>'+
-        '</div>'+
-      '</div>';
+    // ── Характеристики — только непустые + кастомные
+    var specRows = [
+      {l:'Материал',   v:p.material},
+      {l:'Объём',      v:p.volume},
+      {l:'Размер',     v:p.size},
+      {l:'В упаковке', v:pack+' шт.'},
+    ];
+    if(p.specs && Array.isArray(p.specs)){
+      p.specs.forEach(function(s){ if(s.l&&s.v) specRows.push(s); });
+    }
+    var specsHtml = specRows
+      .filter(function(s){ return s.v && s.v!=='—' && s.v!==''; })
+      .map(function(s){ return '<div class="spec"><div class="spec-l">'+s.l+'</div><div class="spec-v">'+s.v+'</div></div>'; })
+      .join('');
+    document.getElementById('sw').innerHTML = specsHtml
+      ? '<div class="specs-section"><h2 class="section-title">Характеристики</h2><div class="specs-grid">'+specsHtml+'</div></div>'
+      : '';
 
     // ── Похожие товары ───────────────────────────────────────
     var rel = getProducts().filter(function(x){ return x.cat===p.cat && x.id!==p.id; }).slice(0,4);
@@ -232,32 +215,17 @@
         '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover" alt="">';
     };
 
-    function getDiscount(q){
-      if(q < pack)    return 0;
-      if(q < pack*10) return 1;
-      if(q < pack*20) return 2;
-      return 3;
-    }
-
     function applyQty(q){
       qty = Math.max(pack, Math.round(q/pack)*pack);
-      document.getElementById('qty-input').textContent = qty; // для span
       var inp = document.getElementById('qty-input');
       if(inp) inp.value = qty;
       document.getElementById('qty-display').textContent = qty;
       var packs = qty/pack;
       var pw = packs===1?'упаковка':packs<5?'упаковки':'упаковок';
       document.getElementById('qty-packs').textContent = '= '+packs+' '+pw;
-      document.getElementById('qty-minus').disabled = (qty <= pack);
-      var row = getDiscount(qty);
-      var mult = [1.33,1,0.76,0.59][row];
-      var up = p.price * mult;
-      document.getElementById('price-display').textContent = up.toFixed(2)+' ₽';
-      document.getElementById('total-display').textContent = (up*qty).toFixed(2);
-      for(var i=0;i<4;i++){
-        var dr = document.getElementById('dr-'+i);
-        if(dr) dr.classList.toggle('disc-active', i===row);
-      }
+      document.getElementById('qty-minus').disabled = (qty<=pack);
+      document.getElementById('price-display').textContent = p.price.toFixed(2)+' ₽';
+      document.getElementById('total-display').textContent = (p.price*qty).toFixed(2);
     }
 
     window.chQty = function(dir){ applyQty(qty + dir*pack); };

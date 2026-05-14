@@ -32,7 +32,18 @@ function getCartCount(){ return getCart().reduce(function(s,i){return s+i.qty;},
 
 function refreshCartUI(){
   var count = getCartCount();
+  var total = getCartTotal();
   document.querySelectorAll('.cart-count-badge').forEach(function(el){el.textContent=count;});
+  // Показываем сумму в кнопке корзины
+  var sumEl = document.getElementById('cart-sum');
+  if(sumEl){
+    if(total > 0){
+      sumEl.textContent = '· ' + total.toFixed(0) + ' ₽';
+      sumEl.style.display = 'inline';
+    } else {
+      sumEl.style.display = 'none';
+    }
+  }
   renderCartDrawer();
 }
 function showCartToast(){
