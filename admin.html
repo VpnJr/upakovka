@@ -1397,19 +1397,20 @@ function renderClientsList(){
   var scls={new:'sn',processing:'sp',done:'sd'};
   var slbl={new:'Новый',processing:'В обработке',done:'Выполнен'};
   el.innerHTML = list.map(function(c){
-    var initials = (c.name||c.email||c.phone||'?').charAt(0).toUpperCase();
+    var displayName = c.name && c.name!=='Покупатель' ? c.name : (c.email||c.phone||'Гость');
+    var initials = displayName.charAt(0).toUpperCase();
     var recentOrders = c.orders.slice(0,3).map(function(o){
       return '<span class="otag">#'+o.id+' <span class="os-lbl '+(scls[o.status]||'sn')+'">'+(slbl[o.status]||'Новый')+'</span> '+o.total+' ₽</span>';
     }).join('');
-    var phoneDigits = c.phone.replace(/[^0-9]/g,'');
+    var phoneDigits = (c.phone||'').replace(/[^0-9]/g,'');
     var phoneLink = c.phone ? '<div style="margin-top:8px"><a class="ob" href="tel:+'+phoneDigits+'">📞 '+c.phone+'</a></div>' : '';
     return '<div class="order-card" style="margin-bottom:10px">'+
       '<div class="oc-h">'+
         '<div style="display:flex;align-items:center;gap:12px">'+
           '<div style="width:36px;height:36px;background:var(--bbg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--brd)">'+initials+'</div>'+
           '<div>'+
-            '<div style="font-weight:600;font-size:14px">'+(c.name||'Без имени')+'</div>'+
-            '<div style="font-size:12px;color:var(--mut)">'+(c.email||c.phone||'')+'</div>'+
+            '<div style="font-weight:600;font-size:14px">'+displayName+'</div>'+
+            '<div style="font-size:12px;color:var(--mut)">'+(c.email&&c.email!==displayName?c.email:(c.phone||''))+'</div>'+
           '</div>'+
         '</div>'+
         '<div style="text-align:right">'+
