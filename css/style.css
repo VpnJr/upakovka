@@ -347,3 +347,20 @@ a{color:inherit;text-decoration:none}
 
 .fp-select{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--r);font-size:13px;outline:none;font-family:inherit;background:#fff;cursor:pointer;transition:border-color .15s}
 .fp-select:focus{border-color:var(--brand)}
+
+/* ── КАСТОМНЫЙ ДРОПДАУН КАТЕГОРИЙ ── */
+.cat-dropdown{position:relative}
+.cat-dd-selected{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r);background:#fff;cursor:pointer;font-size:13px;font-weight:500;transition:border-color .15s;user-select:none}
+.cat-dd-selected:hover{border-color:var(--brand)}
+.cat-dd-arrow{font-size:11px;color:var(--muted);flex-shrink:0;margin-left:6px;transition:transform .2s}
+.cat-dd-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:200;overflow:hidden;max-height:280px;overflow-y:auto}
+.cat-dd-item{padding:10px 14px;font-size:13px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--gray)}
+.cat-dd-item:last-child{border-bottom:none}
+.cat-dd-item:hover{background:var(--brand-bg);color:var(--brand-d)}
+.cat-dd-item.active{background:var(--brand-bg);color:var(--brand-d);font-weight:600}
+
+/* ── ПИЛЮЛИ ПОДКАТЕГОРИЙ ── */
+.cat-sub-list{display:flex;flex-direction:column;gap:4px}
+.sub-pill{background:var(--gray);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--muted);text-align:left;transition:all .15s;white-space:nowrap}
+.sub-pill:hover{border-color:var(--brand);color:var(--brand-d);background:var(--brand-bg)}
+.sub-pill.active{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-d);font-weight:600}

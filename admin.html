@@ -841,14 +841,8 @@ function uploadAllPendingPhotos(onDone){
 //  СОХРАНЕНИЕ НА GITHUB
 // ════════════════════════════════════════════════════════
 function saveToFirebase(products){
-  gStatus('⏳ Сохраняем товары в Firebase…','loading');
-  saveProductsToFirebase(products, function(ok){
-    if(ok){
-      gStatus('✓ Товары сохранены — фото видны всем устройствам!','ok');
-    } else {
-      gStatus('⚠ Ошибка сохранения в Firebase. Проверьте интернет.','err');
-    }
-  });
+  // Тихое сохранение — без уведомлений
+  saveProductsToFirebase(products, null);
 }
 
 // ════════════════════════════════════════════════════════
@@ -1092,14 +1086,7 @@ function delSubCat(catId,subId){
         </div>
         <div id="imp-file-name" style="display:none;font-size:13px;color:#16a34a;font-weight:500;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r)"></div>
       </div>
-      <div style="display:flex;gap:16px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-          <input type="radio" name="imp-mode" value="replace" checked/> Заменить все товары
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-          <input type="radio" name="imp-mode" value="add"/> Добавить к существующим
-        </label>
-      </div>
+
       <div id="imp-err" style="display:none;color:#b91c1c;font-size:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r);padding:8px 12px"></div>
       <div id="imp-preview" style="display:none">
         <div id="imp-preview-title" style="font-size:12px;font-weight:600;color:var(--mut);margin-bottom:6px"></div>
@@ -1290,8 +1277,7 @@ function buildImpPreview(rows){
 
 function doImport(){
   if(!_importRows.length) return;
-  var mode     = document.querySelector('input[name="imp-mode"]:checked').value;
-  var existing = mode === 'add' ? getProducts() : [];
+  var existing = getProducts(); // всегда добавляем к существующим
   var maxId    = existing.length ? Math.max.apply(null, existing.map(function(p){ return p.id; })) : 0;
   _importRows.forEach(function(p, i){ p.id = maxId + i + 1; });
   var merged = existing.concat(_importRows);

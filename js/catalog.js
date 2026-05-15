@@ -152,51 +152,98 @@ function quickAdd(id, btn){
 
 // ── Фильтр-панель ─────────────────────────────────────
 function buildFilterPanel(){
-  var cats   = getCats();
-  var catSel = document.getElementById('cat-select');
-  var subSel = document.getElementById('sub-select');
-  if(!catSel) return;
+  var cats = getCats();
+  var list = document.getElementById('cat-dd-list');
+  if(!list) return;
 
-  catSel.innerHTML = '<option value="all">Все категории</option>';
-  cats.forEach(function(c){
-    var opt = document.createElement('option');
-    opt.value = c.id;
-    opt.textContent = c.emoji + ' ' + c.label;
-    catSel.appendChild(opt);
+  var items = [{ id:'all', emoji:'🏠', label:'Все категории' }].concat(cats);
+  list.innerHTML = '';
+  items.forEach(function(c){
+    var div = document.createElement('div');
+    div.className = 'cat-dd-item' + (c.id === (catalogState.cat||'all') ? ' active' : '');
+    div.textContent = (c.emoji||'') + ' ' + c.label;
+    div.dataset.id = c.id;
+    div.onclick = function(){ onCatSelect(c.id); };
+    list.appendChild(div);
   });
 
-  catSel.value = catalogState.cat || 'all';
-  buildSubSelect(catalogState.cat);
+  var sel = items.find(function(c){ return c.id === (catalogState.cat||'all'); });
+  var lbl = document.getElementById('cat-dd-label');
+  if(lbl && sel){
+    lbl.innerHTML = '';
+    var span1 = document.createElement('span');
+    span1.textContent = (sel.emoji||'') + ' ' + sel.label;
+    var span2 = document.createElement('span');
+    span2.className = 'cat-dd-arrow';
+    span2.textContent = '▾';
+    lbl.appendChild(span1);
+    lbl.appendChild(span2);
+  }
+
+  buildSubList(catalogState.cat);
 }
 
-function buildSubSelect(catId){
-  var cats   = getCats();
-  var subSel = document.getElementById('sub-select');
-  if(!subSel) return;
+
+function buildSubList(catId){
+  var cats = getCats();
+  var wrap = document.getElementById('sub-list');
+  if(!wrap) return;
   var cat = cats.find(function(c){ return c.id === catId; });
   if(cat && cat.sub && cat.sub.length){
-    subSel.innerHTML = '<option value="">Все подкатегории</option>';
+    wrap.innerHTML = '';
     cat.sub.forEach(function(s){
-      var opt = document.createElement('option');
-      opt.value = s.id;
-      opt.textContent = s.label;
-      subSel.appendChild(opt);
+      var btn = document.createElement('button');
+      btn.className = 'sub-pill' + (s.id === catalogState.subCat ? ' active' : '');
+      btn.textContent = s.label;
+      btn.onclick = function(){ onSubSelect(s.id); };
+      wrap.appendChild(btn);
     });
-    subSel.value = catalogState.subCat || '';
-    subSel.style.display = 'block';
+    wrap.style.display = 'block';
   } else {
-    subSel.style.display = 'none';
+    wrap.style.display = 'none';
   }
+}
+
+
+// Закрыть дропдаун при клике вне
+document.addEventListener('click', function(e){
+  var dd = document.getElementById('cat-dropdown');
+  if(dd && !dd.contains(e.target)){
+    var list = document.getElementById('cat-dd-list');
+    if(list) list.style.display = 'none';
+    var arrow = document.querySelector('.cat-dd-arrow');
+    if(arrow) arrow.textContent = '▾';
+  }
+});
+
+function toggleCatDD(){
+  var list = document.getElementById('cat-dd-list');
+  if(!list) return;
+  var open = list.style.display !== 'none';
+  list.style.display = open ? 'none' : 'block';
+  var arrow = document.querySelector('.cat-dd-arrow');
+  if(arrow) arrow.textContent = open ? '▾' : '▴';
 }
 
 function onCatSelect(val){
   catalogState.cat = val; catalogState.subCat = '';
-  buildSubSelect(val); renderCatalog();
+  // Закрыть дропдаун
+  var list = document.getElementById('cat-dd-list');
+  if(list) list.style.display = 'none';
+  var arrow = document.querySelector('.cat-dd-arrow');
+  if(arrow) arrow.textContent = '▾';
+  buildFilterPanel();
+  renderCatalog();
 }
 
 function onSubSelect(val){
-  catalogState.subCat = val; renderCatalog();
+  catalogState.subCat = val;
+  buildSubList(catalogState.cat);
+  renderCatalog();
 }
+
+// Алиасы для совместимости
+function buildSubSelect(catId){ buildSubList(catId); }
 
 
 function setCat(cat, subCat){
@@ -240,10 +287,8 @@ function resetFilters(){
   var px = document.getElementById('price-max');      if(px) px.value = '';
   var ss = document.getElementById('sort-select');    if(ss) ss.value = 'default';
   document.querySelectorAll('.fp-badges input[type=checkbox]').forEach(function(c){ c.checked = false; });
-  var catSel = document.getElementById('cat-select');
-  if(catSel) catSel.value = 'all';
-  var subSel = document.getElementById('sub-select');
-  if(subSel){ subSel.style.display='none'; subSel.value=''; }
+  catalogState.cat = 'all'; catalogState.subCat = '';
+  buildFilterPanel();
   renderCatalog();
 }
 

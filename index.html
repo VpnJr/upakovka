@@ -41,12 +41,19 @@
 
       <div class="fp-block">
         <div class="fp-title">Категория</div>
-        <select class="fp-select" id="cat-select" onchange="onCatSelect(this.value)">
-          <option value="all">Все категории</option>
-        </select>
-        <select class="fp-select" id="sub-select" onchange="onSubSelect(this.value)" style="display:none;margin-top:6px">
-          <option value="">Все подкатегории</option>
-        </select>
+        <!-- Кастомный дропдаун категорий -->
+        <div class="cat-dropdown" id="cat-dropdown">
+          <div class="cat-dd-selected" onclick="toggleCatDD()" id="cat-dd-label">
+            <span>Все категории</span>
+            <span class="cat-dd-arrow">▾</span>
+          </div>
+          <div class="cat-dd-list" id="cat-dd-list" style="display:none"></div>
+        </div>
+        <!-- Подкатегории -->
+        <div class="cat-sub-list" id="sub-list" style="display:none;margin-top:8px"></div>
+        <!-- Скрытые selects для совместимости с JS -->
+        <select id="cat-select" style="display:none" onchange="onCatSelect(this.value)"><option value="all">Все</option></select>
+        <select id="sub-select" style="display:none" onchange="onSubSelect(this.value)"><option value="">Все</option></select>
       </div>
 
       <div class="fp-block">
