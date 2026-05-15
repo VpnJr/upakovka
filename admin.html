@@ -1061,221 +1061,211 @@ function delSubCat(catId,subId){
   if(c)c.sub=c.sub.filter(function(s){return s.id!==subId;});
   saveCats(cats); renderCats(); showToast('Удалено','info');
 }
-</script>
-<!-- MODAL: ИМПОРТ -->
-<div class="modal" id="modal-import" onclick="if(this===event.target)closeImportModal()">
-  <div class="mbox mbox-sm">
-    <div class="mhdr"><h2>Импорт товаров</h2><button class="mcls" onclick="closeImportModal()">✕</button></div>
-    <div class="mbody">
-      <div style="font-size:13px;color:var(--mut);line-height:1.6;background:var(--gr);border-radius:var(--r);padding:12px 14px;border:1px solid var(--bor)">
-        <b>Формат файла (Excel .xlsx или CSV .csv):</b><br>
-        Первая строка — заголовки:<br>
-        <code style="font-size:11px;background:#fff;padding:2px 6px;border-radius:4px;border:1px solid var(--bor)">name, price, oldPrice, meta, cat, subCat, packQty, material, volume, size, badge, emoji, sku</code><br><br>
-        Обязательные: <b>name, price</b><br>
-        Остальные — необязательные
-      </div>
-      <div class="fg">
-        <label>Выберите файл Excel (.xlsx) или CSV (.csv)</label>
-        <input type="file" id="import-file" accept=".xlsx,.csv,.xls" style="padding:8px;border:1.5px solid var(--bor);border-radius:var(--r);font-size:13px;width:100%;cursor:pointer"/>
-      </div>
-      <div style="display:flex;gap:12px">
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-          <input type="radio" name="import-mode" value="replace" checked/> Заменить все товары
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
-          <input type="radio" name="import-mode" value="add"/> Добавить к существующим
-        </label>
-      </div>
-      <div class="merr" id="import-err"></div>
-      <div id="import-preview" style="display:none">
-        <div style="font-size:12px;font-weight:600;color:var(--mut);margin-bottom:6px" id="import-preview-title"></div>
-        <div style="max-height:200px;overflow-y:auto;border:1px solid var(--bor);border-radius:var(--r);font-size:12px" id="import-preview-table"></div>
-      </div>
-    </div>
-    <div class="mftr">
-      <button class="btn bo" onclick="closeImportModal()">Отмена</button>
-      <button class="btn bp" id="import-btn" onclick="doImport()" disabled>📥 Импортировать</button>
-    </div>
-  </div>
-</div>
 
-<script>
-// ════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════
 //  ИМПОРТ EXCEL / CSV
-// ════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════
 var importedRows = [];
 
 function openImportModal(){
   importedRows = [];
-  var fi = document.getElementById('import-file');
-  fi.value = '';
-  // Переустанавливаем listener каждый раз чтобы избежать дублей
-  fi.onchange = function(){
-    var file = this.files[0];
-    if(!file) return;
-    var nm = file.name.toLowerCase();
-    if(nm.endsWith('.csv')){
-      readCSV(file);
-    } else if(nm.endsWith('.xlsx') || nm.endsWith('.xls')){
-      readExcel(file);
-    } else {
-      showImportErr('Поддерживаются только .xlsx, .xls и .csv файлы');
-    }
-  };
-  document.getElementById('import-preview').style.display = 'none';
-  document.getElementById('import-err').style.display = 'none';
-  document.getElementById('import-btn').disabled = true;
+  document.getElementById('imp-preview').style.display = 'none';
+  document.getElementById('imp-err').textContent = '';
+  document.getElementById('imp-btn').disabled = true;
+  document.getElementById('imp-file').value = '';
+  document.getElementById('imp-drop-lbl').textContent = 'Перетащите файл сюда или нажмите для выбора';
   document.getElementById('modal-import').style.display = 'flex';
 }
-function closeImportModal(){ document.getElementById('modal-import').style.display = 'none'; }
-
-// addEventListener вызывается из openImportModal чтобы элемент точно существовал
-
-function readCSV(file){
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var text = e.target.result;
-    var lines = text.split(/
-?
-/).filter(function(l){ return l.trim(); });
-    if(lines.length < 2){ showImportErr('Файл пустой или содержит только заголовки'); return; }
-    var headers = parseCSVLine(lines[0]);
-    var rows = [];
-    for(var i = 1; i < lines.length; i++){
-      var cols = parseCSVLine(lines[i]);
-      if(cols.length === 0) continue;
-      var obj = {};
-      headers.forEach(function(h, idx){ obj[h.trim().toLowerCase()] = (cols[idx] || '').trim(); });
-      rows.push(obj);
-    }
-    processImportRows(rows);
-  };
-  reader.readAsText(file, 'UTF-8');
+function closeImportModal(){
+  document.getElementById('modal-import').style.display = 'none';
 }
 
-function parseCSVLine(line){
-  var result = [], cur = '', inQ = false;
-  for(var i = 0; i < line.length; i++){
-    var ch = line[i];
-    if(ch === '"'){ inQ = !inQ; }
-    else if(ch === ',' && !inQ){ result.push(cur); cur = ''; }
-    else { cur += ch; }
-  }
-  result.push(cur);
-  return result;
+function impFileChosen(input){
+  var file = input.files[0];
+  if(file) handleImportFile(file);
 }
 
-function readExcel(file){
-  // Используем SheetJS через CDN
-  if(typeof XLSX === 'undefined'){
-    var script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    script.onload = function(){ doReadExcel(file); };
-    script.onerror = function(){ showImportErr('Не удалось загрузить библиотеку для Excel. Попробуйте сохранить файл как CSV.'); };
-    document.head.appendChild(script);
+function handleImportFile(file){
+  var nm = file.name.toLowerCase();
+  document.getElementById('imp-drop-lbl').textContent = '📄 ' + file.name;
+  if(nm.endsWith('.csv')){
+    var reader = new FileReader();
+    reader.onload = function(e){ parseCSVImport(e.target.result); };
+    reader.readAsText(file, 'UTF-8');
+  } else if(nm.endsWith('.xlsx') || nm.endsWith('.xls')){
+    var reader2 = new FileReader();
+    reader2.onload = function(e){ parseExcelImport(e.target.result); };
+    reader2.readAsArrayBuffer(file);
   } else {
-    doReadExcel(file);
+    document.getElementById('imp-err').textContent = 'Поддерживаются .xlsx, .xls и .csv';
   }
 }
 
-function doReadExcel(file){
-  var reader = new FileReader();
-  reader.onload = function(e){
-    try{
-      var wb = XLSX.read(e.target.result, {type:'array'});
-      var ws = wb.Sheets[wb.SheetNames[0]];
-      var data = XLSX.utils.sheet_to_json(ws, {defval:''});
-      // Приводим ключи к нижнему регистру
-      var rows = data.map(function(row){
-        var obj = {};
-        Object.keys(row).forEach(function(k){ obj[k.trim().toLowerCase()] = String(row[k]).trim(); });
-        return obj;
-      });
-      processImportRows(rows);
-    } catch(e){
-      showImportErr('Ошибка чтения Excel: ' + e.message);
+function parseCSVImport(text){
+  var lines = text.split(/?
+/).filter(function(l){ return l.trim(); });
+  if(lines.length < 2){ document.getElementById('imp-err').textContent = 'Файл пустой'; return; }
+  var sep = lines[0].indexOf(';') > lines[0].indexOf(',') ? ';' : ',';
+  function parseLine(line){
+    var r=[], cur='', inq=false;
+    for(var i=0;i<line.length;i++){
+      var c=line[i];
+      if(c==='"'){ inq=!inq; }
+      else if(c===sep && !inq){ r.push(cur.trim()); cur=''; }
+      else cur+=c;
     }
-  };
-  reader.readAsArrayBuffer(file);
+    r.push(cur.trim()); return r;
+  }
+  var headers = parseLine(lines[0]).map(function(h){ return h.toLowerCase().replace(/\s+/g,''); });
+  var rows = [];
+  for(var i=1;i<lines.length;i++){
+    var cols = parseLine(lines[i]);
+    var obj = {};
+    headers.forEach(function(h,idx){ obj[h] = cols[idx]||''; });
+    rows.push(obj);
+  }
+  buildImportPreview(rows);
 }
 
-function processImportRows(rows){
-  if(!rows.length){ showImportErr('Нет данных для импорта'); return; }
+function parseExcelImport(buf){
+  if(typeof XLSX === 'undefined'){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = function(){
+      var wb = XLSX.read(buf, {type:'array'});
+      var data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''});
+      var rows = data.map(function(r){
+        var o={};
+        Object.keys(r).forEach(function(k){ o[k.toLowerCase().replace(/\s+/g,'')] = String(r[k]); });
+        return o;
+      });
+      buildImportPreview(rows);
+    };
+    s.onerror = function(){ document.getElementById('imp-err').textContent = 'Ошибка загрузки библиотеки. Попробуйте CSV.'; };
+    document.head.appendChild(s);
+  } else {
+    var wb = XLSX.read(buf, {type:'array'});
+    var data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''});
+    var rows = data.map(function(r){
+      var o={};
+      Object.keys(r).forEach(function(k){ o[k.toLowerCase().replace(/\s+/g,'')] = String(r[k]); });
+      return o;
+    });
+    buildImportPreview(rows);
+  }
+}
 
-  // Валидация — нужно хотя бы name и price
-  var valid = rows.filter(function(r){ return r.name && r.price && !isNaN(parseFloat(r.price)); });
-  var invalid = rows.length - valid.length;
-
-  if(!valid.length){ showImportErr('Не найдены обязательные колонки name и price. Проверьте заголовки файла.'); return; }
-
+function buildImportPreview(rows){
+  var valid = rows.filter(function(r){ return (r.name||r.название) && (r.price||r.цена) && !isNaN(parseFloat(r.price||r.цена)); });
+  if(!valid.length){
+    document.getElementById('imp-err').textContent = 'Не найдены колонки name и price. Проверьте заголовки.';
+    return;
+  }
+  var maxId = getProducts().length ? Math.max.apply(null, getProducts().map(function(p){ return p.id; })) : 0;
   importedRows = valid.map(function(r, i){
     return {
-      id:       nextId() + i,
-      name:     r.name,
-      sku:      r.sku || '',
+      id:       maxId + 100 + i + 1,
+      name:     r.name || r.название || '',
+      sku:      r.sku || r.артикул || '',
       meta:     r.meta || r.description || r.описание || '',
-      price:    parseFloat(r.price) || 0,
-      oldPrice: r.oldprice || r['old price'] ? parseFloat(r.oldprice || r['old price']) : null,
+      price:    parseFloat(r.price || r.цена) || 0,
+      oldPrice: parseFloat(r.oldprice || r.старая_цена) || null,
       cat:      r.cat || r.category || r.категория || 'containers',
       subCat:   r.subcat || r.subcategory || '',
       badge:    r.badge || null,
       emoji:    r.emoji || '📦',
       photo:    r.photo || r.фото || '',
       photos:   r.photo ? [r.photo] : [],
-      packQty:  parseInt(r.packqty || r['pack qty'] || r.упаковка) || 50,
+      packQty:  parseInt(r.packqty || r.упаковка) || 50,
       material: r.material || r.материал || '—',
       volume:   r.volume || r.объём || r.объем || '—',
       size:     r.size || r.размер || '—',
       specs:    [],
     };
   });
-
-  // Показать превью
-  document.getElementById('import-preview-title').textContent =
-    'Найдено: ' + valid.length + ' товаров' + (invalid ? ' (пропущено строк: ' + invalid + ')' : '');
-
-  var tableHtml = '<table style="width:100%;border-collapse:collapse">' +
+  var skipped = rows.length - valid.length;
+  var html = '<div style="font-size:12px;color:var(--mut);margin-bottom:8px">Найдено <b>'+valid.length+' товаров</b>' + (skipped?' · пропущено строк: '+skipped:'') + '</div>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
     '<thead><tr style="background:var(--gr)">' +
-    '<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--bor)">Название</th>' +
-    '<th style="padding:6px 8px;text-align:right;border-bottom:1px solid var(--bor)">Цена</th>' +
-    '<th style="padding:6px 8px;text-align:left;border-bottom:1px solid var(--bor)">Категория</th>' +
+    '<th style="padding:5px 8px;text-align:left;border:1px solid var(--bor)">Название</th>' +
+    '<th style="padding:5px 8px;border:1px solid var(--bor)">Цена</th>' +
+    '<th style="padding:5px 8px;text-align:left;border:1px solid var(--bor)">Категория</th>' +
     '</tr></thead><tbody>' +
-    importedRows.slice(0,10).map(function(p){
-      return '<tr><td style="padding:5px 8px;border-bottom:1px solid var(--bor)">' + p.name + '</td>' +
-        '<td style="padding:5px 8px;text-align:right;border-bottom:1px solid var(--bor)">' + p.price.toFixed(2) + ' ₽</td>' +
-        '<td style="padding:5px 8px;border-bottom:1px solid var(--bor);color:var(--mut)">' + p.cat + '</td></tr>';
+    importedRows.slice(0,8).map(function(p){
+      return '<tr><td style="padding:5px 8px;border:1px solid var(--bor)">'+p.name+'</td>' +
+        '<td style="padding:5px 8px;border:1px solid var(--bor);text-align:center">'+p.price.toFixed(2)+' ₽</td>' +
+        '<td style="padding:5px 8px;border:1px solid var(--bor);color:var(--mut)">'+p.cat+'</td></tr>';
     }).join('') +
-    (importedRows.length > 10 ? '<tr><td colspan="3" style="padding:6px 8px;color:var(--mut);text-align:center">… и ещё ' + (importedRows.length-10) + ' товаров</td></tr>' : '') +
+    (importedRows.length > 8 ? '<tr><td colspan="3" style="padding:6px;text-align:center;color:var(--mut)">… ещё '+(importedRows.length-8)+' товаров</td></tr>' : '') +
     '</tbody></table>';
-
-  document.getElementById('import-preview-table').innerHTML = tableHtml;
-  document.getElementById('import-preview').style.display = 'block';
-  document.getElementById('import-err').style.display = 'none';
-  document.getElementById('import-btn').disabled = false;
+  document.getElementById('imp-preview').innerHTML = html;
+  document.getElementById('imp-preview').style.display = 'block';
+  document.getElementById('imp-err').textContent = '';
+  document.getElementById('imp-btn').disabled = false;
 }
 
 function doImport(){
   if(!importedRows.length) return;
-  var mode = document.querySelector('input[name="import-mode"]:checked').value;
-  var existing = mode === 'add' ? getProducts() : [];
-  // Переназначить id чтобы не было конфликтов
-  var maxId = existing.length ? Math.max.apply(null, existing.map(function(p){ return p.id; })) : 0;
+  var mode = document.querySelector('input[name="imp-mode"]:checked').value;
+  var base = mode === 'add' ? getProducts() : [];
+  var maxId = base.length ? Math.max.apply(null, base.map(function(p){ return p.id; })) : 0;
   importedRows.forEach(function(p, i){ p.id = maxId + i + 1; });
-  var merged = existing.concat(importedRows);
+  var merged = base.concat(importedRows);
   saveProducts(merged);
   saveToFirebase(merged);
   closeImportModal();
   renderProds();
   showToast('Импортировано ' + importedRows.length + ' товаров ✓', 'ok');
 }
-
-function showImportErr(msg){
-  var el = document.getElementById('import-err');
-  el.textContent = msg; el.style.display = 'block';
-  document.getElementById('import-btn').disabled = true;
-  document.getElementById('import-preview').style.display = 'none';
-}
 </script>
 
+<!-- MODAL: ИМПОРТ -->
+<div class="modal" id="modal-import" onclick="if(this===event.target)closeImportModal()" style="z-index:1100">
+  <div class="mbox mbox-sm">
+    <div class="mhdr">
+      <h2>📊 Импорт товаров из Excel / CSV</h2>
+      <button class="mcls" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="mbody">
+
+      <div style="background:var(--gr);border:1px solid var(--bor);border-radius:var(--r);padding:12px 14px;font-size:12px;color:var(--mut);line-height:1.7">
+        Первая строка файла должна содержать заголовки:<br>
+        <code style="font-size:11px;background:#fff;padding:2px 6px;border-radius:4px;border:1px solid var(--bor);display:inline-block;margin-top:4px">name, price, meta, cat, packQty, material, volume, size, sku</code><br>
+        <b style="color:#374151">Обязательные: name, price</b>
+      </div>
+
+      <!-- Зона перетаскивания -->
+      <div id="imp-dropzone"
+        style="border:2px dashed var(--bor);border-radius:var(--rl);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--gr)"
+        onclick="document.getElementById('imp-file').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--br)';this.style.background='var(--bbg)'"
+        ondragleave="this.style.borderColor='var(--bor)';this.style.background='var(--gr)'"
+        ondrop="event.preventDefault();this.style.borderColor='var(--bor)';this.style.background='var(--gr)';if(event.dataTransfer.files[0])handleImportFile(event.dataTransfer.files[0])">
+        <div style="font-size:36px;margin-bottom:8px">📂</div>
+        <div id="imp-drop-lbl" style="font-size:14px;font-weight:500;color:#374151">Перетащите файл сюда или нажмите для выбора</div>
+        <div style="font-size:12px;color:var(--mut);margin-top:4px">.xlsx, .xls, .csv</div>
+      </div>
+      <input type="file" id="imp-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="impFileChosen(this)"/>
+
+      <div style="display:flex;gap:16px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+          <input type="radio" name="imp-mode" value="replace" checked/> Заменить все товары
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+          <input type="radio" name="imp-mode" value="add"/> Добавить к существующим
+        </label>
+      </div>
+
+      <div id="imp-err" style="color:#b91c1c;font-size:12px;display:block"></div>
+      <div id="imp-preview" style="display:none;max-height:220px;overflow-y:auto"></div>
+
+    </div>
+    <div class="mftr">
+      <button class="btn bo" onclick="closeImportModal()">Отмена</button>
+      <button class="btn bp" id="imp-btn" onclick="doImport()" disabled>📥 Импортировать</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
