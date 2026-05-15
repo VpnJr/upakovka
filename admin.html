@@ -1082,9 +1082,15 @@ function delSubCat(catId,subId){
         Обязательные: <b>name</b> и <b>price</b>. Остальные необязательны.
       </div>
       <div class="fg">
-        <label>Файл Excel (.xlsx) или CSV (.csv)</label>
-        <input type="file" id="imp-file" accept=".xlsx,.xls,.csv"
-          style="padding:8px;border:1.5px solid var(--bor);border-radius:var(--r);font-size:13px;width:100%;cursor:pointer;background:#fff"/>
+        <input type="file" id="imp-file" accept=".xlsx,.xls,.csv" style="display:none"/>
+        <div id="imp-drop" onclick="document.getElementById('imp-file').click()"
+          style="border:2px dashed var(--bor);border-radius:var(--rl);padding:28px 20px;text-align:center;cursor:pointer;background:var(--gr);transition:all .2s">
+          <div style="font-size:36px;margin-bottom:8px">📂</div>
+          <div style="font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:4px">Нажмите чтобы выбрать файл</div>
+          <div style="font-size:12px;color:var(--mut)">или перетащите файл сюда</div>
+          <div style="font-size:11px;color:var(--mut);margin-top:6px">Excel (.xlsx, .xls) или CSV (.csv)</div>
+        </div>
+        <div id="imp-file-name" style="display:none;font-size:13px;color:#16a34a;font-weight:500;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r)"></div>
       </div>
       <div style="display:flex;gap:16px">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
@@ -1112,19 +1118,37 @@ var _importRows = [];
 
 function openImportModal(){
   _importRows = [];
-  document.getElementById('imp-preview').style.display = 'none';
-  document.getElementById('imp-err').style.display    = 'none';
-  document.getElementById('imp-btn').disabled          = true;
-  document.getElementById('imp-file').value            = '';
-  document.getElementById('modal-import').style.display = 'flex';
-  document.getElementById('imp-file').onchange = function(){
-    var file = this.files[0];
-    if(!file) return;
-    var ext = file.name.split('.').pop().toLowerCase();
-    if(ext === 'csv')                    readImpCSV(file);
-    else if(ext === 'xlsx' || ext === 'xls') readImpExcel(file);
-    else impErr('Поддерживаются только .xlsx, .xls, .csv');
+  document.getElementById('imp-preview').style.display  = 'none';
+  document.getElementById('imp-err').style.display      = 'none';
+  document.getElementById('imp-file-name').style.display= 'none';
+  document.getElementById('imp-btn').disabled            = true;
+  document.getElementById('imp-file').value              = '';
+  document.getElementById('modal-import').style.display  = 'flex';
+
+  // Drag & drop на зону
+  var drop = document.getElementById('imp-drop');
+  drop.ondragover = function(e){ e.preventDefault(); drop.style.borderColor='var(--br)'; drop.style.background='var(--bbg)'; };
+  drop.ondragleave= function(){ drop.style.borderColor='var(--bor)'; drop.style.background='var(--gr)'; };
+  drop.ondrop = function(e){
+    e.preventDefault(); drop.style.borderColor='var(--bor)'; drop.style.background='var(--gr)';
+    var file = e.dataTransfer.files[0];
+    if(file) handleImpFile(file);
   };
+
+  document.getElementById('imp-file').onchange = function(){
+    if(this.files[0]) handleImpFile(this.files[0]);
+  };
+}
+
+function handleImpFile(file){
+  var ext = file.name.split('.').pop().toLowerCase();
+  // Показать имя файла
+  var fn = document.getElementById('imp-file-name');
+  fn.textContent = '📄 ' + file.name;
+  fn.style.display = 'block';
+  if(ext === 'csv')                         readImpCSV(file);
+  else if(ext === 'xlsx' || ext === 'xls')  readImpExcel(file);
+  else impErr('Поддерживаются только .xlsx, .xls, .csv');
 }
 
 function closeImportModal(){ document.getElementById('modal-import').style.display = 'none'; }
