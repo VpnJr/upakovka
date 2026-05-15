@@ -280,6 +280,7 @@ input[type=file]{display:none}
       <div class="sb-sec">Магазин</div>
       <div class="si" onclick="showTab('products')" data-tab="products"><span class="si-ico">🏷️</span><span class="si-lbl">Товары</span></div>
       <div class="si" onclick="showTab('categories')" data-tab="categories"><span class="si-ico">🗂️</span><span class="si-lbl">Категории</span></div>
+      <div class="si" onclick="showTab('clients')" data-tab="clients"><span class="si-ico">👥</span><span class="si-lbl">Клиенты</span></div>
     </nav>
     <div class="sb-foot">
       <div class="sb-clock" id="clock"></div>
@@ -357,6 +358,25 @@ input[type=file]{display:none}
         </div>
         <div class="pgrid" id="p-grid"></div>
         <div id="p-empty" class="empty" style="display:none">🔍 Ничего не найдено</div>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div id="pane-clients" class="pane flex">
+      <div class="topbar">
+        <div class="topbar-t">Клиенты</div>
+        <div class="topbar-a"><button class="btn bo bsm" onclick="renderClients()">🔄 Обновить</button></div>
+      </div>
+      <div class="scroll">
+        <div class="scards" id="cl-stats">
+          <div class="scard"><div class="sc-l">👥 Всего клиентов</div><div class="sc-v blue" id="cl-total">—</div></div>
+          <div class="scard"><div class="sc-l">📦 Заказов всего</div><div class="sc-v" id="cl-orders">—</div></div>
+          <div class="scard"><div class="sc-l">💰 Средний чек</div><div class="sc-v green" id="cl-avg">—</div></div>
+        </div>
+        <div class="stb">
+          <div class="sw"><span class="sw-i">🔍</span><input type="text" placeholder="Поиск по email или имени…" oninput="clSearch=this.value;renderClientsList()"/></div>
+        </div>
+        <div id="cl-list"></div>
       </div>
     </div>
 
@@ -1286,6 +1306,87 @@ function doImport(){
   closeImportModal();
   renderProds();
   showToast('Импортировано ' + _importRows.length + ' товаров ✓', 'ok');
+
+// ════════════════════════════════════════════════════════
+//  КЛИЕНТЫ
+// ════════════════════════════════════════════════════════
+var clSearch = '';
+var _clientsCache = [];
+
+function renderClients(){
+  var el = document.getElementById('cl-list');
+  if(el) el.innerHTML = '<div class="empty" style="opacity:.5">⏳ Загружаем клиентов…</div>';
+
+  loadOrdersFromFirebase(function(orders){
+    var map = {};
+    orders.forEach(function(o){
+      var key = o.userId || o.userEmail || o.phone;
+      if(!map[key]) map[key] = {
+        uid:o.userId||null, email:o.userEmail||null,
+        phone:o.phone||'', name:o.name||'',
+        orders:[], totalSpent:0,
+      };
+      map[key].orders.push(o);
+      map[key].totalSpent += parseFloat(o.total||0);
+      if(o.name && o.name!=='Покупатель') map[key].name = o.name;
+    });
+
+    _clientsCache = Object.values(map);
+    _clientsCache.sort(function(a,b){ return b.totalSpent - a.totalSpent; });
+
+    setText('cl-total', _clientsCache.length);
+    setText('cl-orders', orders.length);
+    var total = orders.reduce(function(s,o){ return s+parseFloat(o.total||0); },0);
+    setText('cl-avg', _clientsCache.length ? (total/orders.length).toFixed(0)+' ₽' : '—');
+
+    renderClientsList();
+  });
+}
+
+function renderClientsList(){
+  var list = _clientsCache.slice();
+  if(clSearch){
+    var q=clSearch.toLowerCase();
+    list=list.filter(function(c){
+      return (c.email||'').toLowerCase().indexOf(q)!==-1 ||
+             (c.name||'').toLowerCase().indexOf(q)!==-1 ||
+             (c.phone||'').indexOf(q)!==-1;
+    });
+  }
+  var el = document.getElementById('cl-list');
+  if(!list.length){ el.innerHTML='<div class="empty">Клиентов не найдено</div>'; return; }
+  var scls={new:'sn',processing:'sp',done:'sd'};
+  var slbl={new:'Новый',processing:'В обработке',done:'Выполнен'};
+  el.innerHTML = list.map(function(c){
+    var initials = (c.name||c.email||c.phone||'?').charAt(0).toUpperCase();
+    var recentOrders = c.orders.slice(0,3).map(function(o){
+      return '<span class="otag">#'+o.id+' <span class="os-lbl '+(scls[o.status]||'sn')+'">'+(slbl[o.status]||'Новый')+'</span> '+o.total+' ₽</span>';
+    }).join('');
+    var phoneDigits = c.phone.replace(/[^0-9]/g,'');
+    var phoneLink = c.phone ? '<div style="margin-top:8px"><a class="ob" href="tel:+'+phoneDigits+'">📞 '+c.phone+'</a></div>' : '';
+    return '<div class="order-card" style="margin-bottom:10px">'+
+      '<div class="oc-h">'+
+        '<div style="display:flex;align-items:center;gap:12px">'+
+          '<div style="width:36px;height:36px;background:var(--bbg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--brd)">'+initials+'</div>'+
+          '<div>'+
+            '<div style="font-weight:600;font-size:14px">'+(c.name||'Без имени')+'</div>'+
+            '<div style="font-size:12px;color:var(--mut)">'+(c.email||c.phone||'')+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:16px;font-weight:700;color:var(--brd)">'+c.totalSpent.toFixed(0)+' ₽</div>'+
+          '<div style="font-size:12px;color:var(--mut)">'+c.orders.length+' заказов</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="oc-b">'+
+        '<div style="font-size:12px;color:var(--mut);margin-bottom:6px">Последние заказы:</div>'+
+        '<div class="oc-items">'+recentOrders+'</div>'+
+        phoneLink+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
 }
 </script>
 

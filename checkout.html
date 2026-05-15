@@ -72,6 +72,8 @@
 </div>
 
 <script src="js/data.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/authmodal.js"></script>
 <script src="js/cart.js"></script>
 <script>
 var DC={courier:300,pickup:0,cdek:500};
@@ -135,7 +137,9 @@ function submitOrder(){
       var p=prods.find(function(x){return x.id===item.id;});
       return p?{name:p.name,emoji:p.emoji,qty:item.qty,price:p.price}:null;
     }).filter(Boolean),
-    total:total,status:'new'
+    total:total,status:'new',
+    userId: (getCurrentUser()||{}).uid||null,
+    userEmail: (getCurrentUser()||{}).email||null
   };
   // Сохраняем заказ в Firebase (виден на всех устройствах)
   order.createdAt = Date.now();
