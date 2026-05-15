@@ -16,8 +16,18 @@ var FS = 'https://firestore.googleapis.com/v1/projects/' +
          FIREBASE_CONFIG.projectId + '/databases/(default)/documents';
 
 // ── Универсальные функции Firestore REST ─────────────────
+// Получить токен администратора (только в admin.html)
+function _getAdminToken(){ return (typeof _adminToken !== 'undefined') ? _adminToken : null; }
+
+function _fsHeaders(extra){
+  var h = Object.assign({'Content-Type':'application/json'}, extra||{});
+  var tok = _getAdminToken();
+  if(tok) h['Authorization'] = 'Bearer ' + tok;
+  return h;
+}
+
 function fsGet(path, cb) {
-  fetch(FS + '/' + path)
+  fetch(FS + '/' + path, { headers: _fsHeaders() })
     .then(function(r) { return r.json(); })
     .then(function(d) { cb(null, d); })
     .catch(function(e) { cb(e, null); });
@@ -28,7 +38,7 @@ function fsPatch(path, fields, cb) {
   var mask = keys.map(function(k){ return 'updateMask.fieldPaths=' + k; }).join('&');
   fetch(FS + '/' + path + '?' + mask, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: _fsHeaders(),
     body: JSON.stringify({ fields: fields })
   })
     .then(function(r) { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
@@ -39,7 +49,7 @@ function fsPatch(path, fields, cb) {
 function fsCreate(collection, fields, cb) {
   fetch(FS + '/' + collection, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: _fsHeaders(),
     body: JSON.stringify({ fields: fields })
   })
     .then(function(r) { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
@@ -48,13 +58,13 @@ function fsCreate(collection, fields, cb) {
 }
 
 function fsDelete(path, cb) {
-  fetch(FS + '/' + path, { method: 'DELETE' })
+  fetch(FS + '/' + path, { method: 'DELETE', headers: _fsHeaders() })
     .then(function() { if(cb) cb(null); })
     .catch(function(e) { if(cb) cb(e); });
 }
 
 function fsList(collection, cb) {
-  fetch(FS + '/' + collection)
+  fetch(FS + '/' + collection, { headers: _fsHeaders() })
     .then(function(r) { return r.json(); })
     .then(function(d) { cb(null, d.documents || []); })
     .catch(function(e) { cb(e, []); });

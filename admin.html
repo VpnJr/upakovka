@@ -257,12 +257,15 @@ input[type=file]{display:none}
     <div class="llogo">Upakovka<span>09</span></div>
     <div class="lsub">Панель управления</div>
     <div class="lf">
-      <label>Пароль</label>
-      <input type="password" id="pw-input" placeholder="Введите пароль"/>
-      <div id="pw-err">Неверный пароль</div>
+      <label>Email</label>
+      <input type="email" id="pw-email" placeholder="admin@gmail.com" autocomplete="email"/>
     </div>
-    <button class="btn-login" onclick="doLogin()">Войти →</button>
-    <div class="lhint">По умолчанию: <code>admin123</code></div>
+    <div class="lf">
+      <label>Пароль</label>
+      <input type="password" id="pw-input" placeholder="Ваш пароль" autocomplete="current-password"/>
+      <div id="pw-err" style="display:none"></div>
+    </div>
+    <button class="btn-login" id="login-btn" onclick="doLogin()">Войти →</button>
   </div>
 </div>
 
@@ -481,14 +484,8 @@ input[type=file]{display:none}
 <script src="js/data.js"></script>
 <script>
 // ════════════════════════════════════════════════════════
-//  ⚙️  НАСТРОЙКИ
+//  НАСТРОЙКИ
 // ════════════════════════════════════════════════════════
-
-var PASS      = 'admin123';  // пароль для входа
-
-// ImgBB API — для загрузки фото (бесплатно, фото видны всем)
-// Получить ключ: imgbb.com → Account → API
-// ImgBB и Firebase настроены в js/data.js
 var IMGBB_KEY = '605aad32ee4f662d7c61875d4e055c66';
 
 // ════════════════════════════════════════════════════════
@@ -496,38 +493,64 @@ var IMGBB_KEY = '605aad32ee4f662d7c61875d4e055c66';
 // ════════════════════════════════════════════════════════
 var oFilter='all', oSearch='', pCat='all', pSearch='', pSort='';
 var editId=null, catEditing={};
-var photosState=[]; // массив фото в текущей модалке
-// фото в текущей открытой модалке:
-// null  = не изменялось
-// false = помечено для удаления
-// строка = новый base64 для загрузки
+var photosState=[];
 var photoState = null;
+var _adminToken = null;
 
 // ════════════════════════════════════════════════════════
-//  AUTH
+//  AUTH — Firebase Authentication
 // ════════════════════════════════════════════════════════
-document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
-function doLogin(){
-  if(document.getElementById('pw-input').value===PASS){
-    sessionStorage.setItem('ua','1');
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('pw-input').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  document.getElementById('pw-email').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  var saved = sessionStorage.getItem('ua_token');
+  if(saved){
+    _adminToken = saved;
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='flex';
     init();
-  } else {
-    var i=document.getElementById('pw-input');
-    i.value=''; i.classList.add('shake');
-    document.getElementById('pw-err').style.display='block';
-    setTimeout(function(){i.classList.remove('shake');},600);
   }
-}
-function doLogout(){sessionStorage.removeItem('ua');location.reload();}
-if(sessionStorage.getItem('ua')==='1'){
-  document.addEventListener('DOMContentLoaded',function(){
+});
+
+function doLogin(){
+  var email = document.getElementById('pw-email').value.trim();
+  var pass  = document.getElementById('pw-input').value;
+  var btn   = document.getElementById('login-btn');
+  if(!email || !pass){ showLoginErr('Введите email и пароль'); return; }
+  btn.disabled=true; btn.textContent='⏳ Входим…';
+  fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+FIREBASE_CONFIG.apiKey,{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:email,password:pass,returnSecureToken:true})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    btn.disabled=false; btn.textContent='Войти →';
+    if(d.error){
+      var m={
+        'EMAIL_NOT_FOUND':'Пользователь не найден',
+        'INVALID_PASSWORD':'Неверный пароль',
+        'INVALID_LOGIN_CREDENTIALS':'Неверный email или пароль',
+        'USER_DISABLED':'Аккаунт заблокирован',
+        'TOO_MANY_ATTEMPTS_TRY_LATER':'Слишком много попыток, подождите',
+      };
+      showLoginErr(m[d.error.message]||d.error.message); return;
+    }
+    _adminToken=d.idToken;
+    sessionStorage.setItem('ua_token',_adminToken);
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='flex';
     init();
-  });
+  })
+  .catch(function(e){ btn.disabled=false; btn.textContent='Войти →'; showLoginErr('Ошибка сети: '+e.message); });
 }
+
+function showLoginErr(msg){
+  var el=document.getElementById('pw-err'); el.textContent=msg; el.style.display='block';
+  var i=document.getElementById('pw-input'); i.classList.add('shake');
+  setTimeout(function(){i.classList.remove('shake');},600);
+}
+
+function doLogout(){ _adminToken=null; sessionStorage.removeItem('ua_token'); location.reload(); }
 function init(){
   tick(); setInterval(tick,10000);
   // Запрашиваем разрешение на браузерные уведомления
