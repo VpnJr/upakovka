@@ -66,7 +66,14 @@ function fsDelete(path, cb) {
 function fsList(collection, cb) {
   fetch(FS + '/' + collection, { headers: _fsHeaders() })
     .then(function(r) { return r.json(); })
-    .then(function(d) { cb(null, d.documents || []); })
+    .then(function(d) {
+      if(d.error){
+        console.warn('Firestore fsList error:', d.error.message, 'collection:', collection);
+        cb(new Error(d.error.message), []);
+        return;
+      }
+      cb(null, d.documents || []);
+    })
     .catch(function(e) { cb(e, []); });
 }
 
@@ -177,11 +184,13 @@ function saveOrderToFirebase(order, cb) {
 
 function loadOrdersFromFirebase(cb) {
   fsList('orders', function(err, docs) {
-    if(err) { if(cb) cb([]); return; }
+    if(err){
+      console.warn('loadOrdersFromFirebase error:', err.message);
+      if(cb) cb([], err); return;
+    }
     var orders = docs.map(docToObj).filter(Boolean);
-    // Сортируем новые сначала
     orders.sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
-    if(cb) cb(orders);
+    if(cb) cb(orders, null);
   });
 }
 

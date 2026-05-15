@@ -1340,27 +1340,43 @@ function renderClients(){
   var el = document.getElementById('cl-list');
   if(el) el.innerHTML = '<div class="empty" style="opacity:.5">⏳ Загружаем клиентов…</div>';
 
-  loadOrdersFromFirebase(function(orders){
+  loadOrdersFromFirebase(function(orders, err){
+    if(err){
+      if(el) el.innerHTML = '<div class="empty" style="color:#b91c1c">⚠ Ошибка загрузки: ' + err.message + '<br><small>Проверьте правила Firestore — возможно нет прав на чтение заказов</small></div>';
+      return;
+    }
+    if(!orders || !orders.length){
+      setText('cl-total','0'); setText('cl-orders','0'); setText('cl-avg','—');
+      if(el) el.innerHTML = '<div class="empty">📭 Заказов пока нет — клиенты появятся когда придут первые заказы</div>';
+      return;
+    }
+
     var map = {};
     orders.forEach(function(o){
-      var key = o.userId || o.userEmail || o.phone;
+      // Ключ группировки: userId → userEmail → phone → id заказа
+      var key = o.userId || o.userEmail || o.phone || o.id;
       if(!map[key]) map[key] = {
-        uid:o.userId||null, email:o.userEmail||null,
-        phone:o.phone||'', name:o.name||'',
-        orders:[], totalSpent:0,
+        uid:o.userId||null,
+        email:o.userEmail||null,
+        phone:o.phone||'',
+        name:o.name||'',
+        orders:[],
+        totalSpent:0,
       };
       map[key].orders.push(o);
       map[key].totalSpent += parseFloat(o.total||0);
       if(o.name && o.name!=='Покупатель') map[key].name = o.name;
+      if(o.userEmail && !map[key].email) map[key].email = o.userEmail;
     });
 
     _clientsCache = Object.values(map);
     _clientsCache.sort(function(a,b){ return b.totalSpent - a.totalSpent; });
 
+    var totalOrders = orders.length;
+    var totalSum    = orders.reduce(function(s,o){ return s+parseFloat(o.total||0); },0);
     setText('cl-total', _clientsCache.length);
-    setText('cl-orders', orders.length);
-    var total = orders.reduce(function(s,o){ return s+parseFloat(o.total||0); },0);
-    setText('cl-avg', _clientsCache.length ? (total/orders.length).toFixed(0)+' ₽' : '—');
+    setText('cl-orders', totalOrders);
+    setText('cl-avg', totalOrders ? (totalSum/totalOrders).toFixed(0)+' ₽' : '—');
 
     renderClientsList();
   });
