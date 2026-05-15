@@ -152,26 +152,59 @@ function quickAdd(id, btn){
 
 // ── Фильтр-панель ─────────────────────────────────────
 function buildFilterPanel(){
-  var cats  = getCats();
-  var catEl = document.getElementById('fp-cats');
-  if(!catEl) return;
-  var html = '<button class="cat-btn active" data-cat="all" onclick="setCat(\'all\',\'\',this)">Все товары</button>';
+  var cats   = getCats();
+  var catSel = document.getElementById('cat-select');
+  var subSel = document.getElementById('sub-select');
+  if(!catSel) return;
+
+  catSel.innerHTML = '<option value="all">Все категории</option>';
   cats.forEach(function(c){
-    html += '<button class="cat-btn" data-cat="' + c.id + '" onclick="setCat(\'' + c.id + '\',\'\',this)">' + c.emoji + ' ' + c.label + '</button>';
-    if(c.sub && c.sub.length){
-      c.sub.forEach(function(s){
-        html += '<button class="cat-btn sub-btn" data-cat="' + c.id + '" data-sub="' + s.id + '" onclick="setCat(\'' + c.id + '\',\'' + s.id + '\',this)">└ ' + s.label + '</button>';
-      });
-    }
+    var opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.emoji + ' ' + c.label;
+    catSel.appendChild(opt);
   });
-  catEl.innerHTML = html;
+
+  catSel.value = catalogState.cat || 'all';
+  buildSubSelect(catalogState.cat);
 }
 
-function setCat(cat, subCat, el){
+function buildSubSelect(catId){
+  var cats   = getCats();
+  var subSel = document.getElementById('sub-select');
+  if(!subSel) return;
+  var cat = cats.find(function(c){ return c.id === catId; });
+  if(cat && cat.sub && cat.sub.length){
+    subSel.innerHTML = '<option value="">Все подкатегории</option>';
+    cat.sub.forEach(function(s){
+      var opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.label;
+      subSel.appendChild(opt);
+    });
+    subSel.value = catalogState.subCat || '';
+    subSel.style.display = 'block';
+  } else {
+    subSel.style.display = 'none';
+  }
+}
+
+function onCatSelect(val){
+  catalogState.cat = val; catalogState.subCat = '';
+  buildSubSelect(val); renderCatalog();
+}
+
+function onSubSelect(val){
+  catalogState.subCat = val; renderCatalog();
+}
+
+
+function setCat(cat, subCat){
   catalogState.cat    = cat;
   catalogState.subCat = subCat || '';
-  document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('active'); });
-  if(el) el.classList.add('active');
+  var catSel = document.getElementById('cat-select');
+  if(catSel) catSel.value = cat;
+  buildSubSelect(cat);
   renderCatalog();
 }
 
@@ -207,9 +240,10 @@ function resetFilters(){
   var px = document.getElementById('price-max');      if(px) px.value = '';
   var ss = document.getElementById('sort-select');    if(ss) ss.value = 'default';
   document.querySelectorAll('.fp-badges input[type=checkbox]').forEach(function(c){ c.checked = false; });
-  document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('active'); });
-  var all = document.querySelector('.cat-btn[data-cat="all"]');
-  if(all) all.classList.add('active');
+  var catSel = document.getElementById('cat-select');
+  if(catSel) catSel.value = 'all';
+  var subSel = document.getElementById('sub-select');
+  if(subSel){ subSel.style.display='none'; subSel.value=''; }
   renderCatalog();
 }
 

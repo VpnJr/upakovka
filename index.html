@@ -40,8 +40,13 @@
       </div>
 
       <div class="fp-block">
-        <div class="fp-title">Категории</div>
-        <div class="fp-cats" id="fp-cats"><!-- заполняется JS --></div>
+        <div class="fp-title">Категория</div>
+        <select class="fp-select" id="cat-select" onchange="onCatSelect(this.value)">
+          <option value="all">Все категории</option>
+        </select>
+        <select class="fp-select" id="sub-select" onchange="onSubSelect(this.value)" style="display:none;margin-top:6px">
+          <option value="">Все подкатегории</option>
+        </select>
       </div>
 
       <div class="fp-block">
