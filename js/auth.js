@@ -20,9 +20,15 @@ function authRegister(email, password, name, cb){
     if(d.error){ cb(authErrMsg(d.error.message),null); return; }
     var user={uid:d.localId, email:d.email, name:name||d.email.split('@')[0], token:d.idToken};
     setCurrentUser(user);
-    // Сохранить профиль
-    saveUserProfile(user.uid, {name:user.name, email:user.email, createdAt:Date.now()}, null);
-    cb(null, user);
+    // Гарантированно сохранить профиль в Firestore (даже если поля минимальные)
+    saveUserProfile(user.uid, {
+      name:      user.name,
+      email:     user.email,
+      createdAt: Date.now(),
+      uid:       user.uid
+    }, function(){
+      cb(null, user);
+    });
   })
   .catch(function(e){ cb(e.message,null); });
 }
@@ -42,6 +48,15 @@ function authLogin(email, password, cb){
     loadUserProfile(user.uid, function(profile){
       if(profile&&profile.name) user.name=profile.name;
       setCurrentUser(user);
+      // Если профиль пустой — создать
+      if(!profile || !profile.email){
+        saveUserProfile(user.uid, {
+          name:      user.name,
+          email:     user.email,
+          createdAt: Date.now(),
+          uid:       user.uid
+        }, null);
+      }
       cb(null,user);
     });
   })

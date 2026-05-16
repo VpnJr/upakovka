@@ -357,36 +357,61 @@ function loadUserProfile(uid, cb){
 }
 
 // Все пользователи для админки
-// Firestore LIST не возвращает документы с подколлекциями,
-// поэтому получаем список через collectionGroup query
+// Читаем напрямую из Firebase Authentication — там все зарегистрированные
 function loadAllUsers(cb){
-  // Используем runQuery для получения всех документов в коллекции users
+  // Firebase Auth REST API: получить список всех пользователей
+  // Требует idToken администратора
+  var tok = (typeof _adminToken !== 'undefined') ? _adminToken : null;
+  if(!tok){ cb([]); return; }
+
+  fetch('https://identitytoolkit.googleapis.com/v1/projects/' +
+        FIREBASE_CONFIG.projectId + '/accounts:query?key=' + FIREBASE_CONFIG.apiKey, {
+    method: 'POST',
+    headers: _hw(),
+    body: JSON.stringify({})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d.error || !d.userInfo){ 
+      // Fallback: читаем из Firestore /users
+      _loadAllUsersFromFirestore(cb);
+      return;
+    }
+    var users = d.userInfo.map(function(u){
+      return {
+        _id:       u.localId,
+        uid:       u.localId,
+        email:     u.email || '',
+        name:      u.displayName || u.email.split('@')[0] || '',
+        phone:     u.phoneNumber || '',
+        createdAt: u.createdAt ? parseInt(u.createdAt) : 0,
+        lastLogin: u.lastLoginAt ? parseInt(u.lastLoginAt) : 0,
+      };
+    });
+    cb(users);
+  })
+  .catch(function(){
+    _loadAllUsersFromFirestore(cb);
+  });
+}
+
+// Fallback: читать из Firestore коллекции /users
+function _loadAllUsersFromFirestore(cb){
   var url = 'https://firestore.googleapis.com/v1/projects/' +
             FIREBASE_CONFIG.projectId + '/databases/(default)/documents:runQuery';
-  var body = {
-    structuredQuery: {
-      from: [{collectionId: 'users', allDescendants: false}],
-      // Ищем документы где есть поле email
-      where: {
-        fieldFilter: {
-          field: {fieldPath: 'email'},
-          op: 'GREATER_THAN_OR_EQUAL',
-          value: {stringValue: ''}
-        }
-      }
-    }
-  };
-  fetch(url, {method:'POST', headers:_hw(), body:JSON.stringify(body)})
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(!Array.isArray(data)){ cb([]); return; }
-      var users = data
-        .filter(function(item){ return item.document; })
-        .map(function(item){ return docToObj(item.document); })
-        .filter(function(u){ return u && u.email; });
-      cb(users);
-    })
-    .catch(function(){ cb([]); });
+  fetch(url, {method:'POST', headers:_hw(), body:JSON.stringify({
+    structuredQuery: { from: [{collectionId:'users', allDescendants:false}] }
+  })})
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if(!Array.isArray(data)){ cb([]); return; }
+    var users = data
+      .filter(function(item){ return item.document && item.document.fields; })
+      .map(function(item){ return docToObj(item.document); })
+      .filter(Boolean);
+    cb(users);
+  })
+  .catch(function(){ cb([]); });
 }
 
 // ═══════════════════════════════════════════════════════════
