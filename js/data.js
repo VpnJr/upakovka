@@ -204,19 +204,23 @@ function getCatLabel(cid,sid){
 // ═══════════════════════════════════════════════════════════
 //  ТОВАРЫ — localStorage кеш + Firebase
 // ═══════════════════════════════════════════════════════════
-var DEFAULT_PRODUCTS=[
-  {id:1,name:'Контейнер пластиковый 500мл',meta:'Полипропилен PP, крышка в комплекте',price:4.90,oldPrice:6.50,cat:'containers',subCat:'containers_plastic',badge:'hit',emoji:'📦',photo:'',material:'Полипропилен PP',volume:'500 мл',size:'18×13×5 см',packQty:50},
-  {id:2,name:'Контейнер крафт 750мл',meta:'Крафт-картон, водостойкий',price:8.20,oldPrice:null,cat:'containers',subCat:'containers_paper',badge:'eco',emoji:'🟫',photo:'',material:'Крафт-картон',volume:'750 мл',size:'20×15×6 см',packQty:25},
-  {id:3,name:'Контейнер фольга 1л',meta:'Алюминий, для духовки',price:12.00,oldPrice:null,cat:'containers',subCat:'containers_foil',badge:null,emoji:'🫙',photo:'',material:'Алюминий',volume:'1000 мл',size:'22×16×7 см',packQty:10},
-  {id:4,name:'Стакан бумажный 350мл',meta:'Бумага, для горячих напитков',price:3.10,oldPrice:null,cat:'cups',subCat:'cups_paper',badge:'new',emoji:'☕',photo:'',material:'Бумага',volume:'350 мл',size:'D90×H110 мм',packQty:50},
-  {id:5,name:'Стакан ПЭТ 400мл',meta:'Прозрачный, с крышкой',price:2.70,oldPrice:null,cat:'cups',subCat:'cups_plastic',badge:null,emoji:'🥤',photo:'',material:'ПЭТ',volume:'400 мл',size:'D95×H130 мм',packQty:50},
-  {id:6,name:'Пакет крафт 24×32',meta:'Без ручек, с плоским дном',price:6.50,oldPrice:8.00,cat:'bags',subCat:'bags_kraft',badge:'sale',emoji:'🛍️',photo:'',material:'Крафт-бумага',volume:'—',size:'24×32 см',packQty:100},
-  {id:7,name:'Пакет майка 40×60',meta:'HDPE полиэтилен',price:1.20,oldPrice:null,cat:'bags',subCat:'bags_plastic',badge:null,emoji:'👜',photo:'',material:'HDPE',volume:'—',size:'40×60 см',packQty:100},
-  {id:8,name:'Тарелка бумажная 18см',meta:'Мелованная бумага',price:3.80,oldPrice:null,cat:'plates',subCat:'plates_paper',badge:'eco',emoji:'🍽️',photo:'',material:'Бумага мелованная',volume:'—',size:'D180 мм',packQty:100},
-];
+// Дефолтные товары убраны — каталог пуст если Firebase пуст
 function getProducts(){
-  try{var s=localStorage.getItem('up_products');if(s)return JSON.parse(s);}catch(e){}
-  return JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  try{
+    var s=localStorage.getItem('up_products');
+    if(s){
+      var list=JSON.parse(s);
+      // Если в кеше дефолтные товары без фото — не используем их
+      // Ждём загрузки из Firebase
+      return Array.isArray(list)?list:[];
+    }
+  }catch(e){}
+  return []; // Возвращаем пустой список, Firebase загрузит актуальные
+}
+
+// Принудительно очистить кеш товаров (вызывается при необходимости)
+function clearProductsCache(){
+  localStorage.removeItem('up_products');
 }
 function saveProducts(l){ localStorage.setItem('up_products',JSON.stringify(l)); }
 function nextId(){
@@ -233,16 +237,22 @@ function loadProductsFromServer(cb){
       try{
         var list=JSON.parse(fsVal(doc.fields.data));
         if(Array.isArray(list)&&list.length){
+          // Обновляем кеш актуальными данными из Firebase
           saveProducts(list);
           if(cb)cb(list); return;
         }
       }catch(e){}
     }
-    // Нет данных — записываем дефолтные
-    saveProductsToFirebase(DEFAULT_PRODUCTS,function(){
-      saveProducts(DEFAULT_PRODUCTS);
-      if(cb)cb(DEFAULT_PRODUCTS);
-    });
+    // Документа нет — НЕ записываем дефолтные, просто возвращаем пустой список
+    // Данные добавляются только через админку
+    if(err){
+      // Ошибка сети — используем кеш
+      if(cb)cb(getProducts());
+    } else {
+      // Документ пустой — возвращаем пустой список
+      saveProducts([]);
+      if(cb)cb([]);
+    }
   });
 }
 function saveProductsToFirebase(products,cb){

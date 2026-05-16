@@ -157,14 +157,15 @@
 <script src="js/cart.js"></script>
 <script src="js/catalog.js"></script>
 <script>
-  buildFilterPanel();
-  renderCatalog();
   refreshCartUI();
-  // Загружаем свежие товары с сервера (фото с ImgBB видны всем)
+  // Всегда загружаем актуальные товары из Firebase (не из localStorage кеша)
   loadProductsFromServer(function(){
     buildFilterPanel();
     renderCatalog();
   });
+  // Пока загружается Firebase — показываем пустой каталог, не дефолтные товары
+  buildFilterPanel();
+  renderCatalog();
 </script>
 </body>
 </html>
