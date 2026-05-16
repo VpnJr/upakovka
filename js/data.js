@@ -347,13 +347,36 @@ function loadUserProfile(uid, cb){
 }
 
 // Все пользователи для админки
+// Firestore LIST не возвращает документы с подколлекциями,
+// поэтому получаем список через collectionGroup query
 function loadAllUsers(cb){
-  fsList('users', function(docs, err){
-    if(err){ cb([]); return; }
-    // Фильтруем — только документы с email (не подколлекции orders)
-    var users = docs.map(docToObj).filter(function(u){ return u && u.email; });
-    cb(users);
-  });
+  // Используем runQuery для получения всех документов в коллекции users
+  var url = 'https://firestore.googleapis.com/v1/projects/' +
+            FIREBASE_CONFIG.projectId + '/databases/(default)/documents:runQuery';
+  var body = {
+    structuredQuery: {
+      from: [{collectionId: 'users', allDescendants: false}],
+      // Ищем документы где есть поле email
+      where: {
+        fieldFilter: {
+          field: {fieldPath: 'email'},
+          op: 'GREATER_THAN_OR_EQUAL',
+          value: {stringValue: ''}
+        }
+      }
+    }
+  };
+  fetch(url, {method:'POST', headers:_hw(), body:JSON.stringify(body)})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(!Array.isArray(data)){ cb([]); return; }
+      var users = data
+        .filter(function(item){ return item.document; })
+        .map(function(item){ return docToObj(item.document); })
+        .filter(function(u){ return u && u.email; });
+      cb(users);
+    })
+    .catch(function(){ cb([]); });
 }
 
 // ═══════════════════════════════════════════════════════════

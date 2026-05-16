@@ -862,7 +862,7 @@ function showNewOrderNotification(order){
   // Уведомление внутри страницы
   showOrderBanner(order);
   // Обновляем список заказов если открыт
-  if(adminState && adminState.tab === 'orders') renderOrders();
+  renderOrders();
   updateBadge();
 }
 
@@ -913,11 +913,20 @@ function showTab(t){
 }
 function setFB(el,grp){document.querySelectorAll('[data-g="'+grp+'"]').forEach(function(b){b.classList.remove('on');});el.classList.add('on');}
 function updateBadge(){
-  var orders = window._cachedOrders || [];
+  // Если заказы не загружены — загружаем
+  if(!window._cachedOrders){
+    loadOrdersFromFirebase(function(all){
+      window._cachedOrders = all;
+      _applyBadge(all);
+    });
+  } else {
+    _applyBadge(window._cachedOrders);
+  }
+}
+function _applyBadge(orders){
   var n = orders.filter(function(o){return o.status==='new';}).length;
   var b = document.getElementById('sbadge');
-  b.textContent=n; b.style.display=n?'flex':'none';
-  // Обновляем счётчик на вкладке браузера
+  if(b){ b.textContent=n; b.style.display=n?'flex':'none'; }
   document.title = n ? '('+n+') Админ — Upakovka09' : 'Админ — Upakovka09';
 }
 function setText(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
