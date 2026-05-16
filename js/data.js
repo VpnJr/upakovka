@@ -9,51 +9,43 @@ var FIREBASE_CONFIG = {
   messagingSenderId: "402891810707",
   appId:             "1:402891810707:web:0980f659518bf4394f6a66"
 };
-
 var IMGBB_KEY = '605aad32ee4f662d7c61875d4e055c66';
 
-// Базовые URL
-var FS       = 'https://firestore.googleapis.com/v1/projects/' + FIREBASE_CONFIG.projectId + '/databases/(default)/documents';
-var FS_QUERY = 'https://firestore.googleapis.com/v1/projects/' + FIREBASE_CONFIG.projectId + '/databases/(default)/documents:runQuery';
+var FS = 'https://firestore.googleapis.com/v1/projects/' +
+         FIREBASE_CONFIG.projectId + '/databases/(default)/documents';
 
-// ── Токен для запросов ──────────────────────────────────────
-// Для админки — _adminToken (устанавливается при входе через Firebase Auth)
-// Для покупателей — берётся из sessionStorage (getCurrentUser().token)
-function _getToken(){
-  if(typeof _adminToken !== 'undefined' && _adminToken) return _adminToken;
-  try{
-    var u = JSON.parse(sessionStorage.getItem('up_user') || 'null');
-    return (u && u.token) ? u.token : null;
-  }catch(e){ return null; }
-}
-
-function _h(extra){
-  var h = Object.assign({'Content-Type':'application/json'}, extra||{});
-  var tok = _getToken();
+// ── Заголовки (токен если есть) ─────────────────────────────
+function _h(){
+  var h = {'Content-Type':'application/json'};
+  // Токен администратора (admin.html) или пользователя (auth.js)
+  var tok = (typeof _adminToken !== 'undefined' && _adminToken)
+          ? _adminToken
+          : (typeof getCurrentUser === 'function' && getCurrentUser())
+            ? getCurrentUser().token : null;
   if(tok) h['Authorization'] = 'Bearer ' + tok;
   return h;
 }
 
-// ── Firestore CRUD ──────────────────────────────────────────
+// ── Firestore REST ───────────────────────────────────────────
+// Все callbacks: cb(result, error) — result=null при ошибке
 function fsGet(path, cb){
   fetch(FS+'/'+path, {headers:_h()})
-    .then(function(r){return r.json();})
-    .then(function(d){ cb(d.error?null:d, d.error||null); })
-    .catch(function(e){ cb(null, e); });
+    .then(function(r){ return r.json(); })
+    .then(function(d){ if(d.error) cb(null,d.error); else cb(d,null); })
+    .catch(function(e){ cb(null,e); });
 }
 
 function fsPatch(path, fields, cb){
   var mask = Object.keys(fields).map(function(k){ return 'updateMask.fieldPaths='+k; }).join('&');
   fetch(FS+'/'+path+'?'+mask, {method:'PATCH', headers:_h(), body:JSON.stringify({fields:fields})})
-    .then(function(r){return r.json();})
+    .then(function(r){ return r.json(); })
     .then(function(d){ if(cb) cb(d.error?null:d, d.error||null); })
     .catch(function(e){ if(cb) cb(null,e); });
 }
 
 function fsSet(path, fields, cb){
-  // Полная запись документа (не PATCH)
   fetch(FS+'/'+path, {method:'PATCH', headers:_h(), body:JSON.stringify({fields:fields})})
-    .then(function(r){return r.json();})
+    .then(function(r){ return r.json(); })
     .then(function(d){ if(cb) cb(d.error?null:d, d.error||null); })
     .catch(function(e){ if(cb) cb(null,e); });
 }
@@ -66,7 +58,7 @@ function fsDelete(path, cb){
 
 function fsList(path, cb){
   fetch(FS+'/'+path, {headers:_h()})
-    .then(function(r){return r.json();})
+    .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.error){ cb([], d.error); return; }
       cb(d.documents || [], null);
@@ -74,7 +66,35 @@ function fsList(path, cb){
     .catch(function(e){ cb([], e); });
 }
 
-// ── Конвертация Firestore ↔ JS ──────────────────────────────
+// Firestore Query — поиск документов с фильтром
+function fsQuery(collection, field, op, value, cb){
+  var url = 'https://firestore.googleapis.com/v1/projects/' +
+            FIREBASE_CONFIG.projectId + '/databases/(default)/documents:runQuery';
+  var body = {
+    structuredQuery: {
+      from: [{collectionId: collection}],
+      where: {
+        fieldFilter: {
+          field: {fieldPath: field},
+          op: op || 'EQUAL',
+          value: {stringValue: value}
+        }
+      }
+    }
+  };
+  fetch(url, {method:'POST', headers:_h(), body:JSON.stringify(body)})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(!Array.isArray(data)){ cb([], null); return; }
+      var docs = data
+        .filter(function(item){ return item.document; })
+        .map(function(item){ return item.document; });
+      cb(docs, null);
+    })
+    .catch(function(e){ cb([], e); });
+}
+
+// ── Конвертация Firestore ↔ JS ───────────────────────────────
 function fsVal(v){
   if(!v) return null;
   if(v.stringValue  !== undefined) return v.stringValue;
@@ -85,7 +105,7 @@ function fsVal(v){
   if(v.arrayValue)  return (v.arrayValue.values||[]).map(fsVal);
   if(v.mapValue){
     var obj={}, f=v.mapValue.fields||{};
-    Object.keys(f).forEach(function(k){obj[k]=fsVal(f[k]);});
+    Object.keys(f).forEach(function(k){ obj[k]=fsVal(f[k]); });
     return obj;
   }
   return null;
@@ -99,7 +119,7 @@ function toFsVal(v){
   if(Array.isArray(v))        return {arrayValue:{values:v.map(toFsVal)}};
   if(typeof v==='object'){
     var fields={};
-    Object.keys(v).forEach(function(k){fields[k]=toFsVal(v[k]);});
+    Object.keys(v).forEach(function(k){ fields[k]=toFsVal(v[k]); });
     return {mapValue:{fields:fields}};
   }
   return {stringValue:String(v)};
@@ -107,8 +127,8 @@ function toFsVal(v){
 
 function docToObj(doc){
   if(!doc||!doc.fields) return null;
-  var obj={_id:(doc.name||'').split('/').pop()};
-  Object.keys(doc.fields).forEach(function(k){obj[k]=fsVal(doc.fields[k]);});
+  var obj = {_id:(doc.name||'').split('/').pop()};
+  Object.keys(doc.fields).forEach(function(k){ obj[k]=fsVal(doc.fields[k]); });
   return obj;
 }
 
@@ -155,7 +175,7 @@ function loadCatsFromFirebase(cb){
         var list=JSON.parse(fsVal(doc.fields.data));
         if(Array.isArray(list)&&list.length){
           localStorage.setItem('up_cats',JSON.stringify(list));
-          if(cb)cb(list);return;
+          if(cb)cb(list); return;
         }
       }catch(e){}
     }
@@ -172,7 +192,7 @@ function getCatLabel(cid,sid){
 }
 
 // ═══════════════════════════════════════════════════════════
-//  ТОВАРЫ — localStorage + Firebase
+//  ТОВАРЫ — localStorage кеш + Firebase
 // ═══════════════════════════════════════════════════════════
 var DEFAULT_PRODUCTS=[
   {id:1,name:'Контейнер пластиковый 500мл',meta:'Полипропилен PP, крышка в комплекте',price:4.90,oldPrice:6.50,cat:'containers',subCat:'containers_plastic',badge:'hit',emoji:'📦',photo:'',material:'Полипропилен PP',volume:'500 мл',size:'18×13×5 см',packQty:50},
@@ -188,120 +208,161 @@ function getProducts(){
   try{var s=localStorage.getItem('up_products');if(s)return JSON.parse(s);}catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
 }
-function saveProducts(l){localStorage.setItem('up_products',JSON.stringify(l));}
-function nextId(){var p=getProducts();return p.length?Math.max.apply(null,p.map(function(x){return x.id;}))+1:1;}
-function getPhoto(id){var p=getProducts().find(function(x){return x.id===id;});return(p&&p.photo)?p.photo:'';}
-
+function saveProducts(l){ localStorage.setItem('up_products',JSON.stringify(l)); }
+function nextId(){
+  var p=getProducts();
+  return p.length?Math.max.apply(null,p.map(function(x){return x.id;}))+1:1;
+}
+function getPhoto(id){
+  var p=getProducts().find(function(x){return x.id===id;});
+  return(p&&p.photo)?p.photo:'';
+}
 function loadProductsFromServer(cb){
   fsGet('products/catalog',function(doc,err){
     if(!err&&doc&&doc.fields&&doc.fields.data){
       try{
         var list=JSON.parse(fsVal(doc.fields.data));
-        if(Array.isArray(list)&&list.length){saveProducts(list);if(cb)cb(list);return;}
+        if(Array.isArray(list)&&list.length){
+          saveProducts(list);
+          if(cb)cb(list); return;
+        }
       }catch(e){}
     }
-    saveProductsToFirebase(DEFAULT_PRODUCTS,function(){saveProducts(DEFAULT_PRODUCTS);if(cb)cb(DEFAULT_PRODUCTS);});
+    // Нет данных — записываем дефолтные
+    saveProductsToFirebase(DEFAULT_PRODUCTS,function(){
+      saveProducts(DEFAULT_PRODUCTS);
+      if(cb)cb(DEFAULT_PRODUCTS);
+    });
   });
 }
 function saveProductsToFirebase(products,cb){
-  fsPatch('products/catalog',{data:{stringValue:JSON.stringify(products)}},cb);
+  fsPatch('products/catalog',{data:{stringValue:JSON.stringify(products)}},function(d,e){
+    if(cb)cb(e?null:d,e||null);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
 //  ЗАКАЗЫ
-//
-//  Схема хранения:
-//  - orders/{orderId}           — все заказы (для админа)
-//  - users/{uid}/orders/{orderId} — заказы конкретного юзера
-//
-//  Так каждый пользователь читает только свои заказы,
-//  а админ читает все из корневой коллекции orders/.
+//  Сохраняем в ДВА места:
+//  1. /orders/{id}              — для админа (читает все)
+//  2. /users/{uid}/orders/{id}  — для клиента (читает только свои)
 // ═══════════════════════════════════════════════════════════
-
-// Сохранить заказ — пишем в оба места параллельно
 function saveOrderToFirebase(order, cb){
   var fields = objToFields(order);
-  var done = 0;
-  function finish(){ done++; if(done===2 && cb) cb(null); }
-  // 1. В общую коллекцию заказов (для админа)
-  fsSet('orders/'+order.id, fields, finish);
-  // 2. В подколлекцию пользователя (если авторизован)
-  if(order.userId){
-    fsSet('users/'+order.userId+'/orders/'+order.id, fields, finish);
-  } else {
-    finish(); // нет пользователя — только в общую
-  }
-}
-
-// Загрузить все заказы (для админки)
-function loadOrdersFromFirebase(cb){
-  fsList('orders', function(docs, err){
-    if(err){ if(cb)cb([],err); return; }
-    var orders = docs.map(docToObj).filter(Boolean);
-    orders.sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
-    if(cb)cb(orders, null);
+  // 1. Общая коллекция
+  fsSet('orders/'+order.id, fields, function(){
+    // 2. Подколлекция пользователя (если авторизован)
+    if(order.userId){
+      fsSet('users/'+order.userId+'/orders/'+order.id, fields, function(){
+        if(cb) cb(null);
+      });
+    } else {
+      if(cb) cb(null);
+    }
   });
 }
 
-// Загрузить заказы пользователя из его подколлекции — не требует индексов
-function loadOrdersByUser(uid, cb){
-  fsList('users/'+uid+'/orders', function(docs, err){
+// Все заказы — для админки
+function loadOrdersFromFirebase(cb){
+  fsList('orders', function(docs, err){
     if(err){ if(cb)cb([]); return; }
     var orders = docs.map(docToObj).filter(Boolean);
-    orders.sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
-    if(cb)cb(orders);
+    orders.sort(function(a,b){ return(b.createdAt||0)-(a.createdAt||0); });
+    if(cb) cb(orders);
+  });
+}
+
+// Заказы конкретного пользователя — из его подколлекции
+function loadOrdersByUser(uid, cb){
+  fsList('users/'+uid+'/orders', function(docs, err){
+    if(err||!docs.length){
+      // Fallback: ищем через query в общей коллекции
+      fsQuery('orders','userId','EQUAL',uid,function(docs2,err2){
+        if(err2){ if(cb)cb([]); return; }
+        var orders = docs2.map(docToObj).filter(Boolean);
+        orders.sort(function(a,b){ return(b.createdAt||0)-(a.createdAt||0); });
+        if(cb) cb(orders);
+      });
+      return;
+    }
+    var orders = docs.map(docToObj).filter(Boolean);
+    orders.sort(function(a,b){ return(b.createdAt||0)-(a.createdAt||0); });
+    if(cb) cb(orders);
   });
 }
 
 function updateOrderStatusInFirebase(id, status, cb){
-  var f = {status:{stringValue:status}};
-  var done=0;
-  function finish(){ done++; if(done>=1&&cb) cb(null); }
-  fsPatch('orders/'+id, f, finish);
-  // Попробовать обновить и в подколлекции — но мы не знаем uid, так что только корень
+  fsPatch('orders/'+id, {status:{stringValue:status}}, function(){ if(cb)cb(); });
 }
-
-function deleteOrderFromFirebase(id, cb){ fsDelete('orders/'+id, cb); }
-
+function deleteOrderFromFirebase(id, cb){
+  fsDelete('orders/'+id, function(){ if(cb)cb(); });
+}
 function deleteAllOrdersFromFirebase(cb){
   fsList('orders', function(docs){
-    if(!docs.length){if(cb)cb();return;}
-    var n=docs.length, done=0;
+    if(!docs||!docs.length){ if(cb)cb(); return; }
+    var count=docs.length, done=0;
     docs.forEach(function(doc){
-      fsDelete('orders/'+(doc.name||'').split('/').pop(), function(){if(++done>=n&&cb)cb();});
+      var id=(doc.name||'').split('/').pop();
+      fsDelete('orders/'+id, function(){ if(++done>=count&&cb)cb(); });
     });
   });
 }
 
-// Polling новых заказов для админки
-var _lastOrderCount=0, _orderPollTimer=null;
+// Polling новых заказов
+var _lastNewCount=0, _pollTimer=null;
 function startOrderPolling(onNew){
-  if(_orderPollTimer) return;
-  _orderPollTimer=setInterval(function(){
+  if(_pollTimer) return;
+  _pollTimer=setInterval(function(){
     loadOrdersFromFirebase(function(orders){
-      var n=orders.filter(function(o){return o.status==='new';}).length;
-      if(_lastOrderCount>0 && n>_lastOrderCount && onNew) onNew(orders[0]);
-      _lastOrderCount=n;
+      var newCount=orders.filter(function(o){return o.status==='new';}).length;
+      if(_lastNewCount>0&&newCount>_lastNewCount&&onNew) onNew(orders[0]);
+      _lastNewCount=newCount;
     });
-  }, 5000);
+  },5000);
+}
+function stopOrderPolling(){ if(_pollTimer){clearInterval(_pollTimer);_pollTimer=null;} }
+
+// ═══════════════════════════════════════════════════════════
+//  ПОЛЬЗОВАТЕЛИ — читает и сохраняет профили
+// ═══════════════════════════════════════════════════════════
+function saveUserProfile(uid, data, cb){
+  fsSet('users/'+uid, objToFields(data), function(){ if(cb)cb(); });
+}
+
+function loadUserProfile(uid, cb){
+  fsGet('users/'+uid, function(doc, err){
+    if(err||!doc){ cb(null); return; }
+    cb(docToObj(doc));
+  });
+}
+
+// Все пользователи для админки
+function loadAllUsers(cb){
+  fsList('users', function(docs, err){
+    if(err){ cb([]); return; }
+    // Фильтруем — только документы с email (не подколлекции orders)
+    var users = docs.map(docToObj).filter(function(u){ return u && u.email; });
+    cb(users);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
-//  КОРЗИНА — только localStorage
+//  КОРЗИНА и прочее — localStorage
 // ═══════════════════════════════════════════════════════════
-function getOrders(){try{return JSON.parse(localStorage.getItem('up_orders')||'[]');}catch(e){return[];}}
-function saveOrders(l){localStorage.setItem('up_orders',JSON.stringify(l));}
+function getOrders(){ try{return JSON.parse(localStorage.getItem('up_orders')||'[]');}catch(e){return[];} }
+function saveOrders(l){ localStorage.setItem('up_orders',JSON.stringify(l)); }
 
-// ═══════════════════════════════════════════════════════════
-//  СЖАТИЕ ФОТО
-// ═══════════════════════════════════════════════════════════
+// ── Сжатие фото ─────────────────────────────────────────────
 function compressPhoto(dataUrl,cb){
   var img=new Image();
   img.onload=function(){
     var MAX=1200,w=img.width,h=img.height;
     if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
-    var c=document.createElement('canvas');c.width=w;c.height=h;
-    c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.85));
+    var c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    c.getContext('2d').drawImage(img,0,0,w,h);
+    cb(c.toDataURL('image/jpeg',0.85));
   };
-  img.onerror=function(){cb(dataUrl);};img.src=dataUrl;
+  img.onerror=function(){cb(dataUrl);};
+  img.src=dataUrl;
 }

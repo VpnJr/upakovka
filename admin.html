@@ -676,71 +676,38 @@ function doImport(){
 var clSearch = '', _clientsCache = [];
 
 function renderClients(){
-  var el = document.getElementById('cl-list');
-  if(el) el.innerHTML = '<div class="empty" style="opacity:.5">⏳ Загружаем клиентов…</div>';
+  var el=document.getElementById('cl-list');
+  if(el) el.innerHTML='<div class="empty" style="opacity:.5">⏳ Загружаем…</div>';
 
-  // Загружаем одновременно: всех зарег. пользователей + все заказы
-  var users = [], orders = [], done = 0;
+  var users=[], orders=[], done=0;
 
-  function onBothLoaded(){
-    // Строим map клиентов из зарегистрированных пользователей
-    var map = {};
-
-    // Сначала добавляем всех зарегистрированных
+  function combine(){
+    var map={};
+    // Все зарегистрированные пользователи
     users.forEach(function(u){
-      if(!u || !u._id) return;
-      map[u._id] = {
-        uid:    u._id,
-        email:  u.email || '',
-        name:   u.name  || '',
-        phone:  '',
-        orders: [],
-        spent:  0,
-        registered: true,
-      };
+      if(!u||!u._id) return;
+      map[u._id]={uid:u._id,email:u.email||'',name:u.name||'',phone:'',orders:[],spent:0,registered:true};
     });
-
-    // Добавляем заказы — привязываем к пользователю или создаём гостя
+    // Привязать заказы
     orders.forEach(function(o){
-      var key = o.userId || ('guest_' + (o.userEmail||o.phone||o.id));
-      if(!map[key]) map[key] = {
-        uid:    o.userId || null,
-        email:  o.userEmail || '',
-        name:   o.name || '',
-        phone:  o.phone || '',
-        orders: [],
-        spent:  0,
-        registered: false,
-      };
+      var key=o.userId||('guest_'+(o.userEmail||o.phone||o.id));
+      if(!map[key]) map[key]={uid:o.userId||null,email:o.userEmail||'',name:o.name||'',phone:o.phone||'',orders:[],spent:0,registered:false};
       map[key].orders.push(o);
-      map[key].spent += parseFloat(o.total||0);
-      if(o.phone) map[key].phone = o.phone;
-      if(o.name && o.name !== 'Покупатель' && !map[key].name) map[key].name = o.name;
-      if(o.userEmail && !map[key].email) map[key].email = o.userEmail;
+      map[key].spent+=parseFloat(o.total||0);
+      if(o.phone&&!map[key].phone) map[key].phone=o.phone;
+      if(o.name&&o.name!=='Покупатель'&&!map[key].name) map[key].name=o.name;
+      if(o.userEmail&&!map[key].email) map[key].email=o.userEmail;
     });
-
-    _clientsCache = Object.values(map).sort(function(a,b){ return b.spent - a.spent; });
-
-    var total = orders.reduce(function(s,o){ return s+parseFloat(o.total||0); }, 0);
-    setText('cl-total', users.length);
-    setText('cl-orders', orders.length);
-    setText('cl-avg', orders.length ? (total/orders.length).toFixed(0)+' ₽' : '—');
+    _clientsCache=Object.values(map).sort(function(a,b){return b.spent-a.spent;});
+    var total=orders.reduce(function(s,o){return s+parseFloat(o.total||0);},0);
+    setText('cl-total',users.length);
+    setText('cl-orders',orders.length);
+    setText('cl-avg',orders.length?(total/orders.length).toFixed(0)+' ₽':'—');
     renderClientsList();
   }
 
-  // Загрузить зарегистрированных пользователей из Firestore /users
-  fsList('users', function(err, docs){
-    users = (docs||[]).map(docToObj).filter(Boolean);
-    done++;
-    if(done === 2) onBothLoaded();
-  });
-
-  // Загрузить все заказы
-  loadOrdersFromFirebase(function(all){
-    orders = all || [];
-    done++;
-    if(done === 2) onBothLoaded();
-  });
+  loadAllUsers(function(u){ users=u||[]; done++; if(done===2) combine(); });
+  loadOrdersFromFirebase(function(o){ orders=o||[]; done++; if(done===2) combine(); });
 }
 
 function renderClientsList(){
