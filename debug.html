@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="UTF-8"/><title>Debug Firebase</title>
+<style>body{font-family:monospace;padding:20px;background:#1a1a1a;color:#00ff00}
+.ok{color:#00ff00}.err{color:#ff4444}.info{color:#ffaa00}
+pre{background:#111;padding:10px;border-radius:4px;overflow-x:auto;font-size:12px;margin:4px 0}
+button{background:#333;color:#fff;border:1px solid #555;padding:8px 16px;cursor:pointer;margin:4px;border-radius:4px}
+</style></head>
+<body>
+<h2>🔧 Firebase Debug</h2>
+<button onclick="testAll()">▶ Запустить все тесты</button>
+<button onclick="clearLog()">🗑 Очистить</button>
+<div id="log"></div>
+<script src="js/data.js"></script>
+<script>
+function log(msg, cls){
+  var d=document.getElementById('log');
+  var el=document.createElement('div');
+  el.className=cls||'info';
+  el.innerHTML=msg;
+  d.appendChild(el);
+}
+function logPre(label, data, cls){
+  log('<b>'+label+'</b>', cls||'info');
+  var pre=document.createElement('pre');
+  pre.textContent=typeof data==='string'?data:JSON.stringify(data,null,2);
+  document.getElementById('log').appendChild(pre);
+}
+function clearLog(){ document.getElementById('log').innerHTML=''; }
+
+function testAll(){
+  clearLog();
+  log('=== ТЕСТ 1: Прямой fetch к /orders ===','info');
+  var url='https://firestore.googleapis.com/v1/projects/'+FIREBASE_CONFIG.projectId+'/databases/(default)/documents/orders';
+  log('URL: '+url,'info');
+  fetch(url)
+    .then(function(r){
+      log('HTTP статус: '+r.status+(r.ok?' ✓':' ✗'), r.ok?'ok':'err');
+      return r.json();
+    })
+    .then(function(d){
+      if(d.error){
+        logPre('ОШИБКА Firebase:', d.error, 'err');
+      } else if(d.documents){
+        log('Документов найдено: '+d.documents.length,'ok');
+        if(d.documents.length){
+          logPre('Первый документ:', d.documents[0], 'ok');
+        } else {
+          log('Коллекция orders пуста (нет заказов)','info');
+        }
+      } else {
+        logPre('Ответ без documents:', d, 'err');
+      }
+    })
+    .catch(function(e){ log('FETCH ОШИБКА: '+e.message,'err'); });
+
+  log('','info');
+  log('=== ТЕСТ 2: fsList через data.js ===','info');
+  fsList('orders', function(docs, err){
+    if(err){
+      logPre('fsList ОШИБКА:', err, 'err');
+    } else {
+      log('fsList вернул: '+docs.length+' документов', docs.length?'ok':'info');
+      docs.slice(0,2).forEach(function(d,i){
+        logPre('Документ '+i+':', docToObj(d), 'ok');
+      });
+    }
+  });
+
+  log('','info');
+  log('=== ТЕСТ 3: loadOrdersFromFirebase ===','info');
+  loadOrdersFromFirebase(function(orders){
+    log('loadOrdersFromFirebase вернул: '+orders.length+' заказов', orders.length?'ok':'info');
+    orders.slice(0,2).forEach(function(o,i){
+      logPre('Заказ '+i+':', o, 'ok');
+    });
+    if(!orders.length) log('⚠ Заказов нет в Firebase или ошибка загрузки','err');
+  });
+
+  log('','info');
+  log('=== ТЕСТ 4: Коллекция /users ===','info');
+  fsList('users', function(docs, err){
+    if(err){ logPre('users ОШИБКА:', err, 'err'); return; }
+    log('users: '+docs.length+' документов', docs.length?'ok':'info');
+    docs.slice(0,3).forEach(function(d,i){
+      logPre('User '+i+':', docToObj(d), 'ok');
+    });
+  });
+
+  log('','info');
+  log('=== ТЕСТ 5: Продукты ===','info');
+  loadProductsFromServer(function(prods){
+    log('Товаров загружено: '+prods.length, prods.length?'ok':'err');
+  });
+}
+</script>
+</body>
+</html>

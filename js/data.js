@@ -15,9 +15,19 @@ var FS = 'https://firestore.googleapis.com/v1/projects/' +
          FIREBASE_CONFIG.projectId + '/databases/(default)/documents';
 
 // ── Заголовки (токен если есть) ─────────────────────────────
+// Заголовки для GET (без Content-Type)
 function _h(){
+  var h = {};
+  var tok = (typeof _adminToken !== 'undefined' && _adminToken)
+          ? _adminToken
+          : (typeof getCurrentUser === 'function' && getCurrentUser())
+            ? getCurrentUser().token : null;
+  if(tok) h['Authorization'] = 'Bearer ' + tok;
+  return h;
+}
+// Заголовки для POST/PATCH (с Content-Type)
+function _hw(){
   var h = {'Content-Type':'application/json'};
-  // Токен администратора (admin.html) или пользователя (auth.js)
   var tok = (typeof _adminToken !== 'undefined' && _adminToken)
           ? _adminToken
           : (typeof getCurrentUser === 'function' && getCurrentUser())
@@ -37,21 +47,21 @@ function fsGet(path, cb){
 
 function fsPatch(path, fields, cb){
   var mask = Object.keys(fields).map(function(k){ return 'updateMask.fieldPaths='+k; }).join('&');
-  fetch(FS+'/'+path+'?'+mask, {method:'PATCH', headers:_h(), body:JSON.stringify({fields:fields})})
+  fetch(FS+'/'+path+'?'+mask, {method:'PATCH', headers:_hw(), body:JSON.stringify({fields:fields})})
     .then(function(r){ return r.json(); })
     .then(function(d){ if(cb) cb(d.error?null:d, d.error||null); })
     .catch(function(e){ if(cb) cb(null,e); });
 }
 
 function fsSet(path, fields, cb){
-  fetch(FS+'/'+path, {method:'PATCH', headers:_h(), body:JSON.stringify({fields:fields})})
+  fetch(FS+'/'+path, {method:'PATCH', headers:_hw(), body:JSON.stringify({fields:fields})})
     .then(function(r){ return r.json(); })
     .then(function(d){ if(cb) cb(d.error?null:d, d.error||null); })
     .catch(function(e){ if(cb) cb(null,e); });
 }
 
 function fsDelete(path, cb){
-  fetch(FS+'/'+path, {method:'DELETE', headers:_h()})
+  fetch(FS+'/'+path, {method:'DELETE', headers:_hw()})
     .then(function(){ if(cb) cb(null); })
     .catch(function(e){ if(cb) cb(e); });
 }
@@ -82,7 +92,7 @@ function fsQuery(collection, field, op, value, cb){
       }
     }
   };
-  fetch(url, {method:'POST', headers:_h(), body:JSON.stringify(body)})
+  fetch(url, {method:'POST', headers:_hw(), body:JSON.stringify(body)})
     .then(function(r){ return r.json(); })
     .then(function(data){
       if(!Array.isArray(data)){ cb([], null); return; }
