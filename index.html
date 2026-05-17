@@ -162,10 +162,17 @@
 <script src="js/data.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/authmodal.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/chat-ui.js"></script>
 <script src="js/cart.js"></script>
 <script src="js/catalog.js"></script>
 <script>
   refreshCartUI();
+  // Инициализация чата для авторизованных пользователей
+  var _cu = getCurrentUser();
+  if(_cu){
+    setTimeout(function(){ initChatWidget(); }, 500);
+  }
   // Всегда загружаем актуальные товары из Firebase (не из localStorage кеша)
   function toggleMobileSearch(){
     var bar = document.getElementById('mobile-search-bar');
