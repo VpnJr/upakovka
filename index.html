@@ -169,10 +169,8 @@
 <script>
   refreshCartUI();
   // Инициализация чата для авторизованных пользователей
-  var _cu = getCurrentUser();
-  if(_cu){
-    setTimeout(function(){ initChatWidget(); }, 500);
-  }
+  // Чат доступен всем — и авторизованным и гостям
+  setTimeout(function(){ initChatWidget(); }, 500);
   // Всегда загружаем актуальные товары из Firebase (не из localStorage кеша)
   function toggleMobileSearch(){
     var bar = document.getElementById('mobile-search-bar');

@@ -159,8 +159,7 @@ function submitOrder(){
 }
 loadProductsFromServer(function(){ renderSummary(); });
   updateAuthUI();
-  var _cu = getCurrentUser();
-  if(_cu){ setTimeout(function(){ initChatWidget(); }, 500); }
+  setTimeout(function(){ initChatWidget(); }, 500);
 renderSummary();
 </script>
 </body>

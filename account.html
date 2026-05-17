@@ -80,10 +80,8 @@
 refreshCartUI();
 updateAuthUI();
   // Инициализация чата для авторизованных пользователей
-  var _cu = getCurrentUser();
-  if(_cu){
-    setTimeout(function(){ initChatWidget(); }, 500);
-  }
+  // Чат доступен всем — и авторизованным и гостям
+  setTimeout(function(){ initChatWidget(); }, 500);
 
 var SCLS = {new:'s-new', processing:'s-proc', done:'s-done'};
 var SLBL = {new:'Новый', processing:'В обработке', done:'Выполнен'};
