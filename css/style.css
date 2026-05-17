@@ -264,13 +264,61 @@ a{color:inherit;text-decoration:none}
   .fp-reset{grid-column:1/-1}
 }
 @media(max-width:768px){
-  .header{gap:10px}
-  .header-search{max-width:none;flex:1}
-  .hero{padding:2rem 1rem;flex-direction:column}
+  /* Шапка */
+  .header{gap:8px;padding:0 12px;height:52px}
+  .header-search{display:none}                    /* скрыть поиск */
+  .logo{font-size:17px}
+  .header-contacts{display:none}
+  .auth-header-btn .auth-name{display:none}       /* только аватар на мобиле */
+  .cart-btn{padding:6px 10px;font-size:12px}
+
+  /* Каталог — 2 товара в строку */
+  .products-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .product-card{border-radius:10px}
+  .product-img{height:110px}
+  .card-emoji{font-size:36px}
+  .product-name{font-size:12px;line-height:1.3}
+  .product-meta{font-size:11px;display:none}      /* скрыть описание */
+  .product-pack{font-size:10px}
+  .product-price{font-size:13px}
+  .product-info{padding:8px}
+
+  /* Счётчик на карточке — компактнее */
+  .card-cart-row{margin-top:6px;gap:5px}
+  .card-qty-ctrl button{width:26px;height:22px;font-size:12px}
+  .card-qty-ctrl span{font-size:11px;height:22px}
+  .card-qty-ctrl{height:22px}
+  .card-add-full{height:32px;font-size:12px}
+  .card-in-cart-lbl{font-size:11px}
+
+  /* Фильтр */
+  .catalog-layout{grid-template-columns:1fr}
+  .filter-panel{padding:12px;border-bottom:1px solid var(--border)}
+  .cat-dd-selected{padding:7px 10px;font-size:12px}
+  .sub-pill{font-size:11px;padding:4px 9px}
+  .fp-title{font-size:11px}
+
+  /* Страница товара */
   .product-page-wrap{grid-template-columns:1fr;padding:1rem}
+  .hero{padding:2rem 1rem;flex-direction:column}
   .checkout-layout{grid-template-columns:1fr}
   .checkout-right{position:static}
   .cart-drawer{width:100%;right:-100%}
+
+  /* Секции */
+  .section{padding:24px 12px}
+  .section-title{font-size:16px}
+}
+
+@media(max-width:480px){
+  /* Очень маленькие экраны */
+  .header{height:48px;padding:0 10px}
+  .logo{font-size:15px}
+  .products-grid{gap:8px}
+  .product-img{height:95px}
+  .product-name{font-size:11px}
+  .product-price{font-size:12px}
+  .product-info{padding:7px}
 }
 
 /* ── PACK INFO BOX ─────────────────────────────── */
@@ -370,3 +418,16 @@ a{color:inherit;text-decoration:none}
 .auth-header-btn:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.5)}
 .auth-avatar{width:24px;height:24px;background:#fff;color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
 .auth-name{max-width:100px;overflow:hidden;text-overflow:ellipsis}
+
+/* ── МОБИЛЬНАЯ КНОПКА ПОИСКА ── */
+.mobile-search-btn{display:none;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;border-radius:var(--r);width:36px;height:36px;font-size:15px;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.mobile-search-btn:hover{background:rgba(255,255,255,.25)}
+
+/* Мобильная строка поиска под шапкой */
+.mobile-search-bar{display:none;background:var(--brand-d);padding:8px 12px;position:sticky;top:48px;z-index:99}
+.mobile-search-bar input{width:100%;padding:8px 14px;border-radius:20px;border:none;font-size:13px;outline:none;font-family:inherit}
+
+@media(max-width:768px){
+  .mobile-search-btn{display:flex}
+  .mobile-search-bar.open{display:block}
+}
