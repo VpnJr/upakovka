@@ -537,18 +537,7 @@ var _adminToken = null;
 // ════════════════════════════════════════════════════════
 //  AUTH — Firebase Authentication
 // ════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', function(){
-  document.getElementById('pw-input').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
-  document.getElementById('pw-email').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
-  var saved = sessionStorage.getItem('ua_token');
-  if(saved){
-    _adminToken = saved;
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='flex';
-    init();
-  }
-});
-
+// doLogin глобальная — доступна из onclick
 function doLogin(){
   var email = document.getElementById('pw-email').value.trim();
   var pass  = document.getElementById('pw-input').value;
@@ -588,6 +577,20 @@ function showLoginErr(msg){
 }
 
 function doLogout(){ _adminToken=null; sessionStorage.removeItem('ua_token'); location.reload(); }
+document.addEventListener('DOMContentLoaded', function(){
+  var ei = document.getElementById('pw-email');
+  var pi = document.getElementById('pw-input');
+  if(ei) ei.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  if(pi) pi.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+  var saved = sessionStorage.getItem('ua_token');
+  if(saved){
+    _adminToken = saved;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    init();
+  }
+});
+
 function init(){
   tick(); setInterval(tick,10000);
   // Запрашиваем разрешение на браузерные уведомления
