@@ -1302,8 +1302,20 @@ function renderClientsList(){
         '<div style="margin-top:8px;font-size:12px;color:var(--mut);margin-bottom:4px">Заказы:</div>'+
         '<div class="oc-items">'+recentOrders+'</div>'+
       '</div>'+
+      '<div class="oc-f" style="justify-content:flex-end">'+
+        '<button class="btn bo bsm" onclick="openChatWithClient(this.dataset.uid)" data-uid="'+c.uid+'" style="display:flex;align-items:center;gap:5px">'+
+          '💬 Открыть чат'+
+        '</button>'+
+      '</div>'+
     '</div>';
   }).join('');
+}
+
+function openChatWithClient(uid){
+  if(!uid) return;
+  var chatId = getChatId(uid);
+  showTab('chats');
+  setTimeout(function(){ openAdminChat(chatId); }, 200);
 }
 
 function escAdm(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
