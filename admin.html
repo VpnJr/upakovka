@@ -489,6 +489,8 @@ input[type=file]{display:none}
 //  НАСТРОЙКИ
 // ════════════════════════════════════════════════════════
 var IMGBB_KEY = '605aad32ee4f662d7c61875d4e055c66';
+// Cloudflare Worker для получения списка пользователей Firebase Auth
+var WORKER_URL = 'https://upakovka09-admin.arvan-aychara2.workers.dev';
 
 // ════════════════════════════════════════════════════════
 //  СОСТОЯНИЕ
@@ -1126,14 +1128,15 @@ function renderClients(){
   var users = [], orders = [], done = 0;
 
   function combine(){
-    // Показываем ТОЛЬКО зарегистрированных пользователей
-    _clientsCache = users.filter(function(u){ return u && u._id && u.email; });
+    // Только зарегистрированные пользователи из Firebase Auth (через Worker)
+    _clientsCache = users.slice();
 
-    // Привязываем их заказы
+    // Привязываем заказы
     _clientsCache.forEach(function(u){
-      u.orders = orders.filter(function(o){ return o.userId === u._id; });
-      u.spent  = u.orders.reduce(function(s,o){ return s + parseFloat(o.total||0); }, 0);
-      // Телефон из последнего заказа если нет в профиле
+      u.orders = orders.filter(function(o){
+        return o.userId === u.uid || o.userEmail === u.email;
+      });
+      u.spent = u.orders.reduce(function(s,o){ return s + parseFloat(o.total||0); }, 0);
       if(!u.phone && u.orders.length) u.phone = u.orders[0].phone || '';
     });
     _clientsCache.sort(function(a,b){ return b.spent - a.spent; });
@@ -1145,7 +1148,20 @@ function renderClients(){
     renderClientsList();
   }
 
-  loadAllUsers(function(u){ users = u||[]; done++; if(done===2) combine(); });
+  // Загружаем пользователей через Cloudflare Worker (Firebase Admin API)
+  fetch(WORKER_URL + '/users', {
+    headers: { 'Authorization': 'Bearer ' + (_adminToken||'') }
+  })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      users = d.users || [];
+      done++; if(done===2) combine();
+    })
+    .catch(function(e){
+      console.error('Worker error:', e);
+      users = []; done++; if(done===2) combine();
+    });
+
   loadOrdersFromFirebase(function(o){ orders = o||[]; done++; if(done===2) combine(); });
 }
 function renderClientsList(){
