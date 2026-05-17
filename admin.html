@@ -561,6 +561,8 @@ function doLogin(){
     }
     _adminToken=d.idToken;
     sessionStorage.setItem('ua_token',_adminToken);
+    sessionStorage.setItem('ua_email', email);
+    sessionStorage.setItem('ua_pass',  pass);
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='flex';
     init();
@@ -580,12 +582,25 @@ document.addEventListener('DOMContentLoaded', function(){
   var pi = document.getElementById('pw-input');
   if(ei) ei.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
   if(pi) pi.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
-  var saved = sessionStorage.getItem('ua_token');
-  if(saved){
-    _adminToken = saved;
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='flex';
-    init();
+  var savedEmail = sessionStorage.getItem('ua_email');
+  var savedPass  = sessionStorage.getItem('ua_pass');
+  if(savedEmail && savedPass){
+    // Получаем свежий токен каждый раз при загрузке страницы
+    fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+FIREBASE_CONFIG.apiKey,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:savedEmail,password:savedPass,returnSecureToken:true})
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.idToken){
+        _adminToken = d.idToken;
+        sessionStorage.setItem('ua_token', _adminToken);
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('app').style.display='flex';
+        init();
+      }
+    })
+    .catch(function(){});
   }
 });
 
@@ -1159,6 +1174,67 @@ var _adminChatId   = null;  // открытый чат
 var _adminChatPoll = null;
 var _adminChatMsgs = [];
 var _adminChatPending = [];
+
+// ════════════════════════════════════════════════════════
+//  КЛИЕНТЫ
+// ════════════════════════════════════════════════════════
+var clSearch = '';
+var _clientsCache = [];
+
+function renderClients(){
+  var el = document.getElementById('cl-list');
+  if(el) el.innerHTML = '<div class="empty" style="opacity:.5">⏳ Загружаем клиентов…</div>';
+
+  loadOrdersFromFirebase(function(orders, err){
+    if(err){
+      if(el) el.innerHTML = '<div class="empty" style="color:#b91c1c">⚠ Ошибка: ' + err.message + '</div>';
+      return;
+    }
+    if(!orders || !orders.length){
+      setText('cl-total','0'); setText('cl-orders','0'); setText('cl-avg','—');
+      if(el) el.innerHTML = '<div class="empty">📭 Заказов пока нет</div>';
+      return;
+    }
+    var map = {};
+    orders.forEach(function(o){
+      var key = o.userId || o.userEmail || o.phone || o.id;
+      if(!map[key]) map[key] = { uid:o.userId||null, email:o.userEmail||null, phone:o.phone||'', name:o.name||'', orders:[], totalSpent:0 };
+      map[key].orders.push(o);
+      map[key].totalSpent += parseFloat(o.total||0);
+      if(o.name && o.name!=='Покупатель') map[key].name = o.name;
+      if(o.userEmail && !map[key].email) map[key].email = o.userEmail;
+    });
+    _clientsCache = Object.values(map);
+    _clientsCache.sort(function(a,b){ return b.totalSpent - a.totalSpent; });
+    var total = orders.reduce(function(s,o){ return s+parseFloat(o.total||0); },0);
+    setText('cl-total', _clientsCache.length);
+    setText('cl-orders', orders.length);
+    setText('cl-avg', orders.length ? (total/orders.length).toFixed(0)+' ₽' : '—');
+    renderClientsList();
+  });
+}
+
+function renderClientsList(){
+  var list = _clientsCache.slice();
+  if(clSearch){ var q=clSearch.toLowerCase(); list=list.filter(function(c){ return (c.email||'').toLowerCase().indexOf(q)!==-1||(c.name||'').toLowerCase().indexOf(q)!==-1||(c.phone||'').indexOf(q)!==-1; }); }
+  var el = document.getElementById('cl-list');
+  if(!list.length){ el.innerHTML='<div class="empty">Клиентов не найдено</div>'; return; }
+  var scls={new:'sn',processing:'sp',done:'sd'}, slbl={new:'Новый',processing:'В обработке',done:'Выполнен'};
+  el.innerHTML = list.map(function(c){
+    var name = c.name && c.name!=='Покупатель' ? c.name : (c.email||c.phone||'Гость');
+    var initial = name.charAt(0).toUpperCase();
+    var sub = c.email && c.email!==name ? c.email : c.phone;
+    var orders = c.orders.slice(0,3).map(function(o){ return '<span class="otag">#'+o.id+' <span class="os-lbl '+(scls[o.status]||'sn')+'">'+(slbl[o.status]||'Новый')+'</span> '+o.total+' ₽</span>'; }).join('');
+    var phone = (c.phone||'').replace(/[^0-9]/g,'');
+    var phoneLink = c.phone ? '<div style="margin-top:8px"><a class="ob" href="tel:+'+phone+'">📞 '+c.phone+'</a></div>' : '';
+    return '<div class="order-card" style="margin-bottom:10px">'+
+      '<div class="oc-h"><div style="display:flex;align-items:center;gap:12px">'+
+        '<div style="width:36px;height:36px;background:var(--bbg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--brd)">'+initial+'</div>'+
+        '<div><div style="font-weight:600;font-size:14px">'+name+'</div><div style="font-size:12px;color:var(--mut)">'+(sub||'')+'</div></div></div>'+
+        '<div style="text-align:right"><div style="font-size:16px;font-weight:700;color:var(--brd)">'+c.totalSpent.toFixed(0)+' ₽</div><div style="font-size:12px;color:var(--mut)">'+c.orders.length+' заказов</div></div></div>'+
+      '<div class="oc-b"><div style="font-size:12px;color:var(--mut);margin-bottom:6px">Последние заказы:</div><div class="oc-items">'+orders+'</div>'+phoneLink+'</div></div>';
+  }).join('');
+}
 
 function renderAdminChats(){
   var listEl = document.getElementById('admin-chat-list');
