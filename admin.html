@@ -1185,54 +1185,124 @@ function renderClients(){
   var el = document.getElementById('cl-list');
   if(el) el.innerHTML = '<div class="empty" style="opacity:.5">⏳ Загружаем клиентов…</div>';
 
-  loadOrdersFromFirebase(function(orders, err){
-    if(err){
-      if(el) el.innerHTML = '<div class="empty" style="color:#b91c1c">⚠ Ошибка: ' + err.message + '</div>';
+  // Загружаем пользователей через Cloudflare Worker (Firebase Admin API)
+  // и параллельно заказы для статистики
+  var users = null, orders = null;
+
+  function tryRender(){
+    if(users === null || orders === null) return; // ждём оба запроса
+
+    if(users.error){
+      if(el) el.innerHTML = '<div class="empty" style="color:#b91c1c">⚠ Ошибка Worker: ' + users.error + '<br><small>Проверьте что Worker запущен и настроен</small></div>';
       return;
     }
-    if(!orders || !orders.length){
-      setText('cl-total','0'); setText('cl-orders','0'); setText('cl-avg','—');
-      if(el) el.innerHTML = '<div class="empty">📭 Заказов пока нет</div>';
-      return;
-    }
-    var map = {};
+
+    // Карта заказов по userId/email
+    var byUser = {};
     orders.forEach(function(o){
-      var key = o.userId || o.userEmail || o.phone || o.id;
-      if(!map[key]) map[key] = { uid:o.userId||null, email:o.userEmail||null, phone:o.phone||'', name:o.name||'', orders:[], totalSpent:0 };
-      map[key].orders.push(o);
-      map[key].totalSpent += parseFloat(o.total||0);
-      if(o.name && o.name!=='Покупатель') map[key].name = o.name;
-      if(o.userEmail && !map[key].email) map[key].email = o.userEmail;
+      var k = o.userId || o.userEmail;
+      if(k){ if(!byUser[k]) byUser[k]=[]; byUser[k].push(o); }
     });
-    _clientsCache = Object.values(map);
-    _clientsCache.sort(function(a,b){ return b.totalSpent - a.totalSpent; });
-    var total = orders.reduce(function(s,o){ return s+parseFloat(o.total||0); },0);
-    setText('cl-total', _clientsCache.length);
-    setText('cl-orders', orders.length);
-    setText('cl-avg', orders.length ? (total/orders.length).toFixed(0)+' ₽' : '—');
+
+    _clientsCache = users.map(function(u){
+      var uOrders = byUser[u.localId] || byUser[u.email] || [];
+      var spent   = uOrders.reduce(function(s,o){ return s+parseFloat(o.total||0); },0);
+      return {
+        uid:       u.localId,
+        email:     u.email      || '',
+        name:      u.displayName|| u.email || 'Без имени',
+        phone:     u.phoneNumber|| '',
+        createdAt: u.createdAt  ? parseInt(u.createdAt) : 0,
+        lastLogin: u.lastSignInTime || '',
+        disabled:  u.disabled   || false,
+        orders:    uOrders,
+        totalSpent:spent,
+      };
+    });
+    _clientsCache.sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+
+    var totalOrders = orders.length;
+    var totalRev    = orders.reduce(function(s,o){ return s+parseFloat(o.total||0); },0);
+    setText('cl-total',  _clientsCache.length);
+    setText('cl-orders', totalOrders);
+    setText('cl-avg',    totalOrders ? (totalRev/totalOrders).toFixed(0)+' ₽' : '—');
     renderClientsList();
+  }
+
+  // 1. Запрос к Worker за списком пользователей Firebase Auth
+  fetch(WORKER_URL + '/users', {
+    headers: { 'Authorization': 'Bearer ' + (_adminToken||'') }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    users = Array.isArray(d) ? d : (d.users || (d.error ? {error: d.error} : []));
+    tryRender();
+  })
+  .catch(function(e){
+    users = {error: e.message};
+    tryRender();
+  });
+
+  // 2. Загрузить заказы
+  loadOrdersFromFirebase(function(allOrders){
+    orders = allOrders || [];
+    tryRender();
   });
 }
 
 function renderClientsList(){
   var list = _clientsCache.slice();
-  if(clSearch){ var q=clSearch.toLowerCase(); list=list.filter(function(c){ return (c.email||'').toLowerCase().indexOf(q)!==-1||(c.name||'').toLowerCase().indexOf(q)!==-1||(c.phone||'').indexOf(q)!==-1; }); }
+  if(clSearch){
+    var q = clSearch.toLowerCase();
+    list = list.filter(function(c){
+      return (c.email||'').toLowerCase().indexOf(q) !== -1 ||
+             (c.name||'').toLowerCase().indexOf(q)  !== -1 ||
+             (c.phone||'').indexOf(q) !== -1;
+    });
+  }
   var el = document.getElementById('cl-list');
   if(!list.length){ el.innerHTML='<div class="empty">Клиентов не найдено</div>'; return; }
-  var scls={new:'sn',processing:'sp',done:'sd'}, slbl={new:'Новый',processing:'В обработке',done:'Выполнен'};
+
+  var scls={new:'sn',processing:'sp',done:'sd'};
+  var slbl={new:'Новый',processing:'В обработке',done:'Выполнен'};
+
   el.innerHTML = list.map(function(c){
-    var name = c.name && c.name!=='Покупатель' ? c.name : (c.email||c.phone||'Гость');
+    var name    = c.name || c.email || 'Без имени';
     var initial = name.charAt(0).toUpperCase();
-    var sub = c.email && c.email!==name ? c.email : c.phone;
-    var orders = c.orders.slice(0,3).map(function(o){ return '<span class="otag">#'+o.id+' <span class="os-lbl '+(scls[o.status]||'sn')+'">'+(slbl[o.status]||'Новый')+'</span> '+o.total+' ₽</span>'; }).join('');
-    var phone = (c.phone||'').replace(/[^0-9]/g,'');
-    var phoneLink = c.phone ? '<div style="margin-top:8px"><a class="ob" href="tel:+'+phone+'">📞 '+c.phone+'</a></div>' : '';
+    var regDate = c.createdAt ? new Date(c.createdAt).toLocaleDateString('ru-RU') : '—';
+    var lastLog = c.lastLogin ? new Date(c.lastLogin).toLocaleDateString('ru-RU') : '—';
+    var recentOrders = c.orders.slice(0,3).map(function(o){
+      return '<span class="otag">#'+o.id+
+        ' <span class="os-lbl '+(scls[o.status]||'sn')+'">'+(slbl[o.status]||'Новый')+'</span>'+
+        ' '+o.total+' ₽</span>';
+    }).join('') || '<span style="font-size:12px;color:var(--mut)">Заказов нет</span>';
+
     return '<div class="order-card" style="margin-bottom:10px">'+
-      '<div class="oc-h"><div style="display:flex;align-items:center;gap:12px">'+
-        '<div style="width:36px;height:36px;background:var(--bbg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--brd)">'+initial+'</div>'+
-        '<div><div style="font-weight:600;font-size:14px">'+name+'</div><div style="font-size:12px;color:var(--mut)">'+(sub||'')+'</div></div></div>'+
-        '<div style="text-align:right"><div style="font-size:16px;font-weight:700;color:var(--brd)">'+c.totalSpent.toFixed(0)+' ₽</div><div style="font-size:12px;color:var(--mut)">'+c.orders.length+' заказов</div></div></div>'+
-      '<div class="oc-b"><div style="font-size:12px;color:var(--mut);margin-bottom:6px">Последние заказы:</div><div class="oc-items">'+orders+'</div>'+phoneLink+'</div></div>';
+      '<div class="oc-h">'+
+        '<div style="display:flex;align-items:center;gap:12px">'+
+          '<div style="width:38px;height:38px;background:var(--bbg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--brd);flex-shrink:0">'+initial+'</div>'+
+          '<div>'+
+            '<div style="font-weight:600;font-size:14px">'+name+
+              (c.disabled ? ' <span style="font-size:10px;background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:4px;font-weight:400">заблокирован</span>' : '')+
+            '</div>'+
+            '<div style="font-size:12px;color:var(--mut)">'+c.email+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:16px;font-weight:700;color:var(--brd)">'+c.totalSpent.toFixed(0)+' ₽</div>'+
+          '<div style="font-size:12px;color:var(--mut)">'+c.orders.length+' заказ.</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="oc-b">'+
+        '<div class="oc-meta">'+
+          '<span class="oc-pill">📅 Регистрация: '+regDate+'</span>'+
+          '<span class="oc-pill">🕐 Последний вход: '+lastLog+'</span>'+
+          (c.phone ? '<span class="oc-pill">📞 '+c.phone+'</span>' : '')+
+        '</div>'+
+        '<div style="margin-top:8px;font-size:12px;color:var(--mut);margin-bottom:4px">Заказы:</div>'+
+        '<div class="oc-items">'+recentOrders+'</div>'+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 
