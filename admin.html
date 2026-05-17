@@ -234,6 +234,113 @@ input[type=file]{display:none}
 .ac-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
 .ac-time{font-size:10px;color:var(--mut)}
 .ac-badge{background:var(--br);color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+
+/* ═══════════════════ TELEGRAM-STYLE CHAT ═══════════════════ */
+.tg-layout{display:flex;flex:1;overflow:hidden;height:100%}
+
+/* Sidebar */
+.tg-sidebar{width:300px;flex-shrink:0;display:flex;flex-direction:column;background:#fff;border-right:1px solid #ddd5d6}
+.tg-sidebar-head{padding:14px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ede8e9}
+.tg-sidebar-title{font-size:17px;font-weight:700;color:#1a1a1a}
+.tg-refresh-btn{background:none;border:none;cursor:pointer;color:#888;padding:6px;border-radius:8px;display:flex;align-items:center;transition:all .15s}
+.tg-refresh-btn:hover{background:#f0eaeb;color:var(--brd)}
+.tg-search-wrap{position:relative;padding:8px 12px;border-bottom:1px solid #ede8e9}
+.tg-search-ico{position:absolute;left:22px;top:50%;transform:translateY(-50%);color:#aaa}
+.tg-search-inp{width:100%;padding:8px 10px 8px 30px;border:none;border-radius:10px;font-size:13px;background:#f5f0f0;outline:none;font-family:inherit;color:#1a1a1a}
+.tg-search-inp::placeholder{color:#b0999b}
+.tg-chat-list{flex:1;overflow-y:auto}
+.tg-chat-list::-webkit-scrollbar{width:4px}
+.tg-chat-list::-webkit-scrollbar-thumb{background:#e0d5d6;border-radius:2px}
+
+/* Chat list items */
+.tg-item{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid #f5f0f0;transition:background .12s;position:relative}
+.tg-item:hover{background:#fdf5f6}
+.tg-item.active{background:#f5eaeb}
+.tg-item.active .tg-item-name{color:var(--brd)}
+.tg-item-ava{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#fff;flex-shrink:0;position:relative;background:linear-gradient(135deg,#7B1E2E,#b03045)}
+.tg-item-online{position:absolute;bottom:1px;right:1px;width:12px;height:12px;background:#22c55e;border-radius:50%;border:2px solid #fff}
+.tg-item-body{flex:1;min-width:0}
+.tg-item-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.tg-item-name{font-size:14px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.tg-item-time{font-size:11px;color:#b0999b;flex-shrink:0}
+.tg-item-preview{font-size:12px;color:#9c8a8c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.tg-item-badge{background:var(--br);color:#fff;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;flex-shrink:0}
+
+/* Chat area */
+.tg-chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#eae6e7;position:relative}
+.tg-chat-bg{position:absolute;inset:0;opacity:.06;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+
+/* Empty state */
+.tg-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:#8a7b7d}
+.tg-empty-ico{width:120px;height:120px;background:rgba(255,255,255,.7);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.tg-empty-title{font-size:20px;font-weight:600;color:#5a4a4c}
+.tg-empty-sub{font-size:13px;color:#a08082;text-align:center;max-width:220px}
+
+/* Chat header */
+.tg-chat-head{background:#fff;border-bottom:1px solid #ddd5d6;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.06);z-index:1}
+.tg-chat-head-ava{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#7B1E2E,#b03045);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;position:relative}
+.tg-head-info{flex:1}
+.tg-head-name{font-size:15px;font-weight:600;color:#1a1a1a}
+.tg-head-status{font-size:12px;color:#6b7280;display:flex;align-items:center;gap:4px}
+.tg-head-online-dot{width:7px;height:7px;background:#22c55e;border-radius:50%}
+
+/* Messages */
+.tg-msgs{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:4px;position:relative;z-index:0}
+.tg-msgs::-webkit-scrollbar{width:4px}
+.tg-msgs::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:2px}
+
+.tg-msg-wrap{display:flex;flex-direction:column;max-width:72%}
+.tg-msg-wrap.from-user{align-self:flex-end}
+.tg-msg-wrap.from-admin{align-self:flex-start}
+
+.tg-bubble{padding:8px 12px;border-radius:16px;font-size:13.5px;line-height:1.55;word-break:break-word;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.from-admin .tg-bubble{background:#fff;border-radius:4px 16px 16px 16px;color:#1a1a1a}
+.from-user  .tg-bubble{background:linear-gradient(135deg,#7B1E2E,#9b2535);color:#fff;border-radius:16px 4px 16px 16px}
+
+.tg-msg-meta{display:flex;align-items:center;gap:3px;font-size:11px;margin-top:3px;padding:0 4px}
+.from-user .tg-msg-meta{justify-content:flex-end;color:rgba(255,255,255,.7)}
+.from-admin .tg-msg-meta{color:#9ca3af}
+.tg-check{font-size:12px}
+.tg-check.read{color:#60a5fa}
+
+.tg-day-sep{text-align:center;margin:10px 0;display:flex;align-items:center;gap:10px}
+.tg-day-sep-line{flex:1;height:1px;background:rgba(0,0,0,.1)}
+.tg-day-sep-txt{font-size:12px;background:rgba(255,255,255,.7);color:#8a7b7d;padding:4px 12px;border-radius:12px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+.tg-sender-label{font-size:11px;font-weight:600;color:#7B1E2E;margin-bottom:3px;padding:0 2px}
+
+/* Files in messages */
+.tg-files{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tg-thumb{width:160px;height:160px;object-fit:cover;border-radius:10px;cursor:pointer;display:block;transition:opacity .15s}
+.tg-thumb:hover{opacity:.9}
+.tg-file-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;font-size:12px;text-decoration:none;color:inherit;transition:background .15s}
+.from-admin .tg-file-btn{background:#f3f4f6;color:#374151}
+.tg-file-btn:hover{background:rgba(255,255,255,.25)}
+.tg-file-ico{width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+
+/* Typing indicator */
+.tg-typing-wrap{align-self:flex-start;background:#fff;border-radius:4px 16px 16px 16px;padding:10px 14px;box-shadow:0 1px 3px rgba(0,0,0,.12);display:flex;align-items:center;gap:4px}
+.tg-typing-dot{width:7px;height:7px;border-radius:50%;background:#9ca3af;animation:tg-bounce .9s infinite}
+.tg-typing-dot:nth-child(2){animation-delay:.18s}
+.tg-typing-dot:nth-child(3){animation-delay:.36s}
+@keyframes tg-bounce{0%,80%,100%{transform:translateY(0);opacity:.6}40%{transform:translateY(-6px);opacity:1}}
+
+/* Input area */
+.tg-input-area{background:#fff;border-top:1px solid #ddd5d6;padding:10px 14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.tg-preview-bar{display:flex;gap:8px;flex-wrap:wrap;display:none}
+.tg-preview-item{position:relative;width:56px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0;border:1.5px solid #e5e7eb}
+.tg-preview-item img,.tg-preview-item video{width:100%;height:100%;object-fit:cover}
+.tg-preview-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.tg-input-row{display:flex;align-items:flex-end;gap:10px}
+.tg-attach{background:none;border:none;cursor:pointer;color:#9b8a8c;padding:6px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.tg-attach:hover{background:#f0e9ea;color:var(--brd)}
+.tg-textarea{flex:1;border:none;border-radius:20px;padding:9px 14px;font-size:13.5px;resize:none;outline:none;font-family:inherit;max-height:120px;overflow-y:auto;line-height:1.45;background:#f5f0f0;color:#1a1a1a;transition:background .15s}
+.tg-textarea:focus{background:#ede6e7}
+.tg-textarea::placeholder{color:#b09a9d}
+.tg-send{background:linear-gradient(135deg,#7B1E2E,#9b2535);border:none;border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:#fff;box-shadow:0 2px 10px rgba(123,30,46,.4);transition:transform .15s,box-shadow .15s}
+.tg-send:hover{transform:scale(1.08);box-shadow:0 4px 16px rgba(123,30,46,.5)}
+.tg-send:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
 </style>
@@ -397,21 +504,35 @@ input[type=file]{display:none}
     </div>
 
     <!-- CHATS -->
-    <div id="pane-chats" class="pane flex" style="overflow:hidden">
-      <div class="topbar">
-        <div class="topbar-t">Чаты с клиентами</div>
-        <div class="topbar-a"><button class="btn bo bsm" onclick="renderAdminChats()">🔄</button></div>
-      </div>
-      <div style="display:flex;flex:1;overflow:hidden">
-        <!-- Список чатов -->
-        <div style="width:280px;border-right:1px solid var(--bor);overflow-y:auto;flex-shrink:0" id="admin-chat-list"></div>
-        <!-- Открытый чат -->
-        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden" id="admin-chat-pane">
-          <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--mut);flex-direction:column;gap:12px">
-            <div style="font-size:48px">💬</div>
-            <div>Выберите чат из списка</div>
+    <div id="pane-chats" class="pane flex" style="overflow:hidden;background:#eae6e7">
+      <div class="tg-layout">
+
+        <!-- ЛЕВАЯ КОЛОНКА — список чатов -->
+        <div class="tg-sidebar">
+          <div class="tg-sidebar-head">
+            <div class="tg-sidebar-title">Сообщения</div>
+            <button class="tg-refresh-btn" onclick="renderAdminChats()" title="Обновить">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+            </button>
+          </div>
+          <div class="tg-search-wrap">
+            <svg class="tg-search-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input class="tg-search-inp" placeholder="Поиск..." oninput="filterAdminChats(this.value)"/>
+          </div>
+          <div class="tg-chat-list" id="admin-chat-list"></div>
+        </div>
+
+        <!-- ПРАВАЯ КОЛОНКА — открытый чат -->
+        <div class="tg-chat-area" id="admin-chat-pane">
+          <div class="tg-empty-state">
+            <div class="tg-empty-ico">
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#c4b0b3" stroke-width="1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="tg-empty-title">Выберите чат</div>
+            <div class="tg-empty-sub">Нажмите на клиента слева чтобы открыть переписку</div>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -516,6 +637,7 @@ input[type=file]{display:none}
 <script src="js/data.js"></script>
 <script src="js/chat.js"></script>
 <script>
+
 // ════════════════════════════════════════════════════════
 //  НАСТРОЙКИ
 // ════════════════════════════════════════════════════════
@@ -1323,6 +1445,91 @@ function escAdm(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function renderAdminChats(){
   var listEl = document.getElementById('admin-chat-list');
   if(!listEl) return;
+
+  loadAllChats(function(chats){
+    _allChatsCache = chats;
+    _drawChatList(chats);
+    // Обновить бейдж вкладки
+    var total = chats.reduce(function(s,c){ return s+(parseInt(c.unreadAdmin)||0); },0);
+    var badge = document.getElementById('chats-badge');
+    if(badge){ badge.textContent=total; badge.style.display=total?'flex':'none'; }
+  });
+}
+
+var _allChatsCache = [];
+
+function filterAdminChats(q){
+  if(!q.trim()){ _drawChatList(_allChatsCache); return; }
+  q = q.toLowerCase();
+  _drawChatList(_allChatsCache.filter(function(c){
+    return (c.userName||'').toLowerCase().indexOf(q)!==-1 ||
+           (c.userEmail||'').toLowerCase().indexOf(q)!==-1;
+  }));
+}
+
+function _drawChatList(chats){
+  var listEl = document.getElementById('admin-chat-list');
+  if(!listEl) return;
+
+  if(!chats.length){
+    listEl.innerHTML = '<div style="padding:24px;text-align:center;color:#9c8a8c;font-size:13px">Чатов пока нет</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  chats.forEach(function(c){
+    var unread  = parseInt(c.unreadAdmin)||0;
+    var online  = c.userOnline;
+    var lastMsg = (c.lastMsg||'').slice(0,38) || 'Нет сообщений';
+    var lastT   = c.lastTime ? _formatChatTime(c.lastTime) : '';
+    var name    = c.userName || c.userEmail || 'Клиент';
+    var initial = name.charAt(0).toUpperCase();
+    var active  = _adminChatId === c._id;
+
+    var item = document.createElement('div');
+    item.className = 'tg-item' + (active ? ' active' : '');
+    item.innerHTML =
+      '<div class="tg-item-ava">'+initial+
+        (online ? '<span class="tg-item-online"></span>' : '')+
+      '</div>'+
+      '<div class="tg-item-body">'+
+        '<div class="tg-item-row">'+
+          '<span class="tg-item-name">'+escAdm(name)+'</span>'+
+          '<span class="tg-item-time">'+lastT+'</span>'+
+        '</div>'+
+        '<div class="tg-item-row">'+
+          '<span class="tg-item-preview">'+escAdm(lastMsg)+'</span>'+
+          (unread ? '<span class="tg-item-badge">'+unread+'</span>' : '')+
+        '</div>'+
+      '</div>';
+    (function(id){ item.onclick = function(){ openAdminChat(id); }; })(c._id);
+    listEl.appendChild(item);
+  });
+}
+
+function _formatChatTime(ts){
+  var d = new Date(ts), now = new Date();
+  if(d.toDateString()===now.toDateString())
+    return d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  var diff = now - d;
+  if(diff < 7*86400000)
+    return ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d.getDay()];
+  return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+}
+
+
+function openChatWithClient(uid){
+  if(!uid) return;
+  var chatId = getChatId(uid);
+  showTab('chats');
+  setTimeout(function(){ openAdminChat(chatId); }, 200);
+}
+
+function escAdm(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderAdminChats(){
+  var listEl = document.getElementById('admin-chat-list');
+  if(!listEl) return;
   listEl.innerHTML = '<div style="padding:16px;color:var(--mut);font-size:13px">⏳ Загружаем…</div>';
 
   loadAllChats(function(chats){
@@ -1366,43 +1573,58 @@ function openAdminChat(chatId){
   _adminChatId = chatId;
   _chatId      = chatId;
   _chatRole    = 'admin';
+  _adminChatPending = [];
 
-  // Обновить активный класс в списке
-  document.querySelectorAll('.ac-item').forEach(function(el){ el.classList.remove('active'); });
-
-  // Пометить прочитанным
+  // Обновить активный класс
+  document.querySelectorAll('.tg-item').forEach(function(el){ el.classList.remove('active'); });
+  var activeItem = document.querySelector('.tg-item[data-cid="'+chatId+'"]');
+  // Помечаем через перерисовку
   markChatRead(chatId, 'admin');
 
-  // Загрузить мета
   loadChatMeta(chatId, function(meta){
-    var pane = document.getElementById('admin-chat-pane');
+    var pane  = document.getElementById('admin-chat-pane');
     if(!pane) return;
-    var name   = meta ? (meta.userName||meta.userEmail||'Клиент') : 'Клиент';
+    var name   = meta ? (meta.userName || meta.userEmail || 'Клиент') : 'Клиент';
+    var email  = meta ? (meta.userEmail || '') : '';
     var online = meta && meta.userOnline;
     var seen   = meta && meta.userLastSeen ? lastSeenText(meta.userLastSeen) : '';
+    var initial= name.charAt(0).toUpperCase();
 
     pane.innerHTML =
-      '<div style="background:#fff;border-bottom:1px solid var(--bor);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0">'+
-        '<div class="ac-ava" style="width:38px;height:38px;background:var(--bbg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--brd);position:relative">'+
-          name.charAt(0).toUpperCase()+
-          (online?'<span class="ac-online"></span>':'')+
+      '<div class="tg-chat-bg"></div>'+
+
+      // Шапка
+      '<div class="tg-chat-head">'+
+        '<div class="tg-chat-head-ava">'+initial+
+          (online ? '<span class="tg-item-online"></span>' : '')+
         '</div>'+
-        '<div>'+
-          '<div style="font-weight:600;font-size:14px">'+escAdm(name)+'</div>'+
-          '<div id="ac-status" style="font-size:12px;color:var(--mut)">'+(online?'🟢 Онлайн':'Был в сети: '+seen)+'</div>'+
+        '<div class="tg-head-info">'+
+          '<div class="tg-head-name">'+escAdm(name)+'</div>'+
+          '<div class="tg-head-status" id="ac-status">'+
+            (online
+              ? '<span class="tg-head-online-dot"></span><span>В сети</span>'
+              : '<span>Был в сети: '+seen+'</span>')+
+          '</div>'+
         '</div>'+
       '</div>'+
-      '<div id="ac-msgs" style="flex:1;overflow-y:auto;padding:12px;background:#f8f5f5;display:flex;flex-direction:column;gap:8px"></div>'+
-      '<div style="border-top:1px solid var(--bor);background:#fff;flex-shrink:0">'+
-        '<div id="ac-preview" style="display:none;padding:8px 12px;flex-wrap:wrap;gap:6px;border-bottom:1px solid #f3f4f6"></div>'+
-        '<div style="display:flex;align-items:flex-end;gap:8px;padding:10px 12px">'+
+
+      // Сообщения
+      '<div class="tg-msgs" id="ac-msgs"></div>'+
+
+      // Ввод
+      '<div class="tg-input-area">'+
+        '<div class="tg-preview-bar" id="ac-preview"></div>'+
+        '<div class="tg-input-row">'+
           '<input type="file" id="ac-file" multiple accept="image/*,video/*,.pdf,.doc,.docx" style="display:none" onchange="onAdminFilePick(this)"/>'+
-          '<button onclick="document.getElementById(&quot;ac-file&quot;).click()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;padding:4px">📎</button>'+
-          '<textarea id="ac-textarea" rows="1" placeholder="Написать…"'+
-            ' style="flex:1;border:1.5px solid var(--bor);border-radius:12px;padding:8px 12px;font-size:13px;resize:none;outline:none;font-family:inherit;max-height:100px;line-height:1.4;transition:border-color .15s"'+
-            ' oninput="this.style.height=&quot;auto&quot;;this.style.height=Math.min(this.scrollHeight,100)+&quot;px&quot;;setTyping(true)"'+
+          '<button class="tg-attach" onclick="document.getElementById(&quot;ac-file&quot;).click()" title="Прикрепить файл">'+
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>'+
+          '</button>'+
+          '<textarea class="tg-textarea" id="ac-textarea" rows="1" placeholder="Написать сообщение…"'+
+            ' oninput="this.style.height=&quot;auto&quot;;this.style.height=Math.min(this.scrollHeight,120)+&quot;px&quot;;setTyping(true)"'+
             ' onkeydown="if(event.key===&quot;Enter&quot;&&!event.shiftKey){event.preventDefault();submitAdminMsg();}"></textarea>'+
-          '<button onclick="submitAdminMsg()" style="background:var(--br);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;flex-shrink:0">➤</button>'+
+          '<button class="tg-send" id="ac-send-btn" onclick="submitAdminMsg()">'+
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>'+
+          '</button>'+
         '</div>'+
       '</div>';
 
@@ -1411,70 +1633,97 @@ function openAdminChat(chatId){
       _adminChatMsgs = msgs;
       _renderAdminMsgs();
       _acScrollBottom();
-
-      // Запустить polling
-      if(_adminChatPoll) clearInterval(_adminChatPoll);
-      _adminChatPoll = setInterval(function(){
-        loadChatMessages(chatId, function(newMsgs){
-          if(newMsgs.length !== _adminChatMsgs.length){
-            _adminChatMsgs = newMsgs;
-            _renderAdminMsgs();
-            _acScrollBottom();
-            markChatRead(chatId, 'admin');
-            renderAdminChats();
-          }
-        });
-        loadChatMeta(chatId, function(m){
-          var s = document.getElementById('ac-status');
-          if(!s||!m) return;
-          if(m.userTyping)      s.textContent = '✏️ Печатает…';
-          else if(m.userOnline) s.textContent = '🟢 Онлайн';
-          else                  s.textContent = 'Был в сети: '+lastSeenText(m.userLastSeen);
-        });
-      }, 2000);
     });
 
-    renderAdminChats(); // обновить список (активный элемент)
+    // Запустить polling
+    if(_adminChatPoll) clearInterval(_adminChatPoll);
+    _adminChatPoll = setInterval(function(){
+      loadChatMessages(chatId, function(newMsgs){
+        if(newMsgs.length !== _adminChatMsgs.length){
+          _adminChatMsgs = newMsgs;
+          _renderAdminMsgs();
+          _acScrollBottom();
+          markChatRead(chatId, 'admin');
+          _drawChatList(_allChatsCache);
+        }
+      });
+      loadChatMeta(chatId, function(m){
+        var s = document.getElementById('ac-status');
+        if(!s || !m) return;
+        if(m.userTyping){
+          s.innerHTML = '<span style="color:#22c55e;font-size:12px">✏️ Печатает…</span>';
+        } else if(m.userOnline){
+          s.innerHTML = '<span class="tg-head-online-dot"></span><span>В сети</span>';
+        } else {
+          s.innerHTML = '<span>Был в сети: '+lastSeenText(m.userLastSeen)+'</span>';
+        }
+      });
+    }, 2000);
+
+    // Перерисовать список (активный элемент)
+    renderAdminChats();
   });
 }
+
 
 function _renderAdminMsgs(){
   var el = document.getElementById('ac-msgs');
   if(!el) return;
-  var lastDay='';
-  el.innerHTML = _adminChatMsgs.map(function(m){
+  var lastDay = '';
+  var html = _adminChatMsgs.map(function(m){
     var isUser = m.from === 'user';
     var cls    = isUser ? 'from-admin' : 'from-user';
-    var day    = m.createdAt ? new Date(m.createdAt).toLocaleDateString('ru-RU',{day:'numeric',month:'long'}) : '';
+    var day    = m.createdAt ? new Date(m.createdAt).toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'}) : '';
     var sep    = '';
-    if(day && day!==lastDay){ sep='<div class="cw-day-sep">'+day+'</div>'; lastDay=day; }
+    if(day && day !== lastDay){
+      sep = '<div class="tg-day-sep"><div class="tg-day-sep-line"></div><div class="tg-day-sep-txt">'+day+'</div><div class="tg-day-sep-line"></div></div>';
+      lastDay = day;
+    }
     var filesHtml = _acRenderFiles(m);
-    var mark = !isUser ? '' : (m.readByAdmin ? ' <span style="color:#60a5fa">✓✓</span>' : ' <span style="opacity:.4">✓</span>');
-    return sep+
-      '<div class="cw-msg '+cls+'">'+
-        '<div style="font-size:10px;color:var(--mut);margin-bottom:2px;padding:0 4px">'+(isUser?'Клиент':'Поддержка')+'</div>'+
-        '<div class="cw-bubble">'+
+    var check = !isUser
+      ? ''
+      : (m.readByAdmin
+          ? '<span class="tg-check read">✓✓</span>'
+          : '<span class="tg-check">✓</span>');
+
+    return sep +
+      '<div class="tg-msg-wrap '+cls+'">'+
+        (isUser ? '<div class="tg-sender-label">Клиент</div>' : '<div class="tg-sender-label" style="text-align:right;color:#888">Поддержка</div>')+
+        '<div class="tg-bubble">'+
           (m.text ? '<div>'+escAdm(m.text)+'</div>' : '')+
-          (filesHtml ? '<div class="cw-files">'+filesHtml+'</div>' : '')+
+          (filesHtml ? '<div class="tg-files">'+filesHtml+'</div>' : '')+
         '</div>'+
-        '<div class="cw-time">'+(m.time||'')+mark+'</div>'+
+        '<div class="tg-msg-meta">'+
+          '<span>'+(m.time||'')+'</span>'+
+          check+
+        '</div>'+
       '</div>';
   }).join('');
+
+  // Индикатор печати
+  el.innerHTML = html;
 }
+
 
 function _acRenderFiles(m){
   if(!m.files||!m.files.length) return '';
   var media = m.files.map(function(f){return{url:f.url,name:f.name,type:f.type};});
+  var mStr  = JSON.stringify(media).replace(/"/g,'&quot;');
   return m.files.map(function(f,i){
-    var allMedia = JSON.stringify(media).replace(/"/g,'&quot;');
-    if(f.type==='image') return '<img class="cw-thumb" src="'+(f.thumb||f.url)+'" onclick="openLightbox(JSON.parse(this.dataset.media),'+i+')" data-media="'+allMedia+'">';
-    if(f.type==='video') return '<div style="position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid rgba(255,255,255,.3)" onclick="openLightbox('+JSON.stringify(media).replace(/"/g,"&quot;")+','+i+')"><video src="'+f.url+'" style="width:100%;height:100%;object-fit:cover"></video><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(0,0,0,.3)">▶</div></div>';
-    return '<a class="cw-file-btn" href="'+f.url+'" download target="_blank">📄 '+escAdm(f.name||'файл')+'</a>';
+    if(f.type==='image')
+      return '<img class="tg-thumb" src="'+(f.thumb||f.url)+'" alt="" onclick="openLightbox(JSON.parse(this.dataset.media),'+i+')" data-media="'+mStr+'">';
+    if(f.type==='video')
+      return '<div style="position:relative;width:160px;height:120px;border-radius:10px;overflow:hidden;cursor:pointer" onclick="openLightbox(JSON.parse(this.dataset.media),'+i+')" data-media="'+mStr+'">'+
+        '<video src="'+f.url+'" style="width:100%;height:100%;object-fit:cover"></video>'+
+        '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;background:rgba(0,0,0,.35)">▶</div></div>';
+    return '<a class="tg-file-btn" href="'+f.url+'" download target="_blank">'+
+      '<div class="tg-file-ico">📄</div>'+
+      '<span>'+escAdm(f.name||'файл')+'</span></a>';
   }).join('');
 }
 
 function _acScrollBottom(){
-  var el=document.getElementById('ac-msgs');
+  var el = document.getElementById('ac-msgs');
   if(el) setTimeout(function(){el.scrollTop=el.scrollHeight;},50);
 }
 
@@ -1493,12 +1742,12 @@ function _renderAdminPreview(){
   bar.style.display='flex';
   bar.innerHTML = _adminChatPending.map(function(p,i){
     var preview = p.file.type.startsWith('image/')
-      ? '<img src="'+p.localUrl+'" style="width:52px;height:52px;object-fit:cover;border-radius:6px">'
+      ? '<img src="'+p.localUrl+'">'
       : p.file.type.startsWith('video/')
-        ? '<video src="'+p.localUrl+'" style="width:52px;height:52px;object-fit:cover;border-radius:6px"></video>'
-        : '<div style="font-size:11px;padding:4px">📄'+escAdm(p.file.name)+'</div>';
-    return '<div style="position:relative;flex-shrink:0">'+preview+
-      '<button onclick="removeAdminPending('+i+')" style="position:absolute;top:1px;right:1px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:10px;cursor:pointer">✕</button></div>';
+        ? '<video src="'+p.localUrl+'"></video>'
+        : '<div style="font-size:10px;padding:4px">📄</div>';
+    return '<div class="tg-preview-item">'+preview+
+      '<button class="tg-preview-del" onclick="removeAdminPending('+i+')">✕</button></div>';
   }).join('');
 }
 
@@ -1509,13 +1758,25 @@ function submitAdminMsg(){
   var text = ta ? ta.value.trim() : '';
   if(!text && !_adminChatPending.length) return;
 
-  var tmp = {from:'admin',text:text,time:new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),createdAt:Date.now(),files:[],readByAdmin:true,readByUser:false,_pending:true};
+  var btn = document.getElementById('ac-send-btn');
+  if(btn) btn.disabled = true;
+
+  var tmp = {
+    from:'admin', text:text,
+    time: new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}),
+    createdAt:Date.now(), files:[], readByAdmin:true, readByUser:false, _pending:true
+  };
   _adminChatMsgs.push(tmp);
   _renderAdminMsgs(); _acScrollBottom();
   if(ta){ ta.value=''; ta.style.height='auto'; }
 
   if(!_adminChatPending.length){
-    sendChatMessage(text, [], function(){ renderAdminChats(); });
+    sendChatMessage(text, [], function(){
+      var i=_adminChatMsgs.findIndex(function(m){return m._pending;});
+      if(i>=0) _adminChatMsgs.splice(i,1);
+      renderAdminChats();
+      if(btn) btn.disabled=false;
+    });
   } else {
     var uploaded=[], idx=0;
     function uploadNext(){
@@ -1524,6 +1785,7 @@ function submitAdminMsg(){
           var i=_adminChatMsgs.findIndex(function(m){return m._pending;});
           if(i>=0) _adminChatMsgs.splice(i,1);
           renderAdminChats();
+          if(btn) btn.disabled=false;
         });
         return;
       }
