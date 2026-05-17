@@ -6,13 +6,38 @@ var _chatMsgs    = [];
 var _chatPending = [];
 var _lastMsgCount = 0;
 
+// ── Гость или авторизованный пользователь ────────────
+function _getChatUser(){
+  var auth = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
+  if(auth) return auth;
+  // Гость — берём из localStorage или создаём
+  var guest = null;
+  try{ guest = JSON.parse(localStorage.getItem('up_guest_chat')||'null'); }catch(e){}
+  return guest; // null если гость ещё не ввёл имя
+}
+
+function _createGuest(name){
+  var id = 'guest_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  var guest = { uid: id, name: name, email: '', isGuest: true };
+  try{ localStorage.setItem('up_guest_chat', JSON.stringify(guest)); }catch(e){}
+  return guest;
+}
+
 function initChatWidget(){
   _ensureChatWidget();
-  var user = getCurrentUser();
-  if(!user) return;
-  initUserChat(user);
+  // Показываем FAB всегда — даже для гостей
+  var user = _getChatUser();
+  if(user){
+    _startChatForUser(user);
+  }
+  // Если нет пользователя — при открытии чата покажем форму ввода имени
+}
+
+function _startChatForUser(user){
   _chatId   = getChatId(user.uid);
   _chatRole = 'user';
+
+  initUserChat(user);
 
   loadChatMessages(_chatId, function(msgs){
     _chatMsgs     = msgs;
@@ -27,8 +52,8 @@ function initChatWidget(){
     _renderMessages();
     _scrollToBottom();
     if(_chatOpen) markChatRead(_chatId, 'user');
-    else _showChatBadge(allMsgs.filter(function(m){return m.from==='admin'&&!m.readByUser;}).length);
-    if(newMsgs.some(function(m){return m.from==='admin';})) _playChatSound();
+    else _showChatBadge(allMsgs.filter(function(m){ return m.from==='admin'&&!m.readByUser; }).length);
+    if(newMsgs.some(function(m){ return m.from==='admin'; })) _playChatSound();
   });
 
   startMetaPoll(_chatId, function(meta){
@@ -37,9 +62,7 @@ function initChatWidget(){
     el.textContent = meta.adminTyping ? 'Поддержка печатает…' : 'Онлайн';
   });
 
-  document.addEventListener('visibilitychange', function(){
-    _markOnline(!document.hidden);
-  });
+  document.addEventListener('visibilitychange', function(){ _markOnline(!document.hidden); });
 }
 
 function _ensureChatWidget(){
@@ -113,7 +136,7 @@ function _ensureChatWidget(){
 '    <button class="cw-close" onclick="toggleChat()">✕</button>\n'+
 '  </div>\n'+
 '  <div class="cw-msgs" id="cw-msgs"></div>\n'+
-'  <div class="cw-input-area">\n'+
+'  <div class="cw-input-area" id="cw-input-area-wrap">\n'+
 '    <div class="cw-preview-bar" id="cw-preview-bar"></div>\n'+
 '    <div class="cw-input-row">\n'+
 '      <input type="file" id="cw-file-input" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none" onchange="onChatFilePick(this)"/>\n'+
@@ -133,11 +156,66 @@ function toggleChat(){
   _chatOpen = !_chatOpen;
   w.style.display = _chatOpen ? 'flex' : 'none';
   if(_chatOpen){
+    // Если пользователь не инициализирован — показать форму имени
+    if(!_chatId){
+      var user = _getChatUser();
+      if(user){
+        _startChatForUser(user);
+        _showChatContent();
+      } else {
+        _showNameForm();
+        return;
+      }
+    }
     _showChatBadge(0);
     markChatRead(_chatId, 'user');
     _scrollToBottom();
     setTimeout(function(){ var el=document.getElementById('cw-textarea'); if(el) el.focus(); }, 100);
   }
+}
+
+function _showNameForm(){
+  var msgs = document.getElementById('cw-msgs');
+  var input= document.getElementById('cw-input-area-wrap');
+  if(msgs) msgs.innerHTML =
+    '<div id="cw-name-form" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:24px;text-align:center">'+
+      '<div style="font-size:48px">👋</div>'+
+      '<div style="font-size:16px;font-weight:600;color:#1a1a1a">Как вас зовут?</div>'+
+      '<div style="font-size:13px;color:#9ca3af">Введите имя чтобы начать переписку</div>'+
+      '<input id="cw-guest-name" type="text" placeholder="Ваше имя или никнейм"'+
+        ' style="width:100%;padding:11px 14px;border:1.5px solid #e8dfe0;border-radius:12px;font-size:14px;outline:none;font-family:inherit;text-align:center;box-sizing:border-box;transition:border-color .15s"'+
+        ' onkeydown="if(event.key===&quot;Enter&quot;) _submitGuestName()"/>'+
+      '<button onclick="_submitGuestName()"'+
+        ' style="width:100%;padding:12px;background:linear-gradient(135deg,#7B1E2E,#9b2535);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">'+
+        'Начать чат →'+
+      '</button>'+
+    '</div>';
+  // Скрыть инпут
+  var ia = document.getElementById('cw-input-area-wrap');
+  if(ia) ia.style.display = 'none';
+  setTimeout(function(){ var el=document.getElementById('cw-guest-name'); if(el) el.focus(); }, 100);
+}
+
+function _showChatContent(){
+  var ia = document.getElementById('cw-input-area-wrap');
+  if(ia) ia.style.display = '';
+}
+
+function _submitGuestName(){
+  var inp  = document.getElementById('cw-guest-name');
+  var name = inp ? inp.value.trim() : '';
+  if(!name){ if(inp){ inp.style.borderColor='#ef4444'; inp.placeholder='Введите имя'; } return; }
+  var guest = _createGuest(name);
+  _startChatForUser(guest);
+  _showChatContent();
+  // Перерисовать шапку
+  var title = document.getElementById('cw-head-title');
+  if(title) title.textContent = 'Поддержка Upakovka09';
+  var msgs = document.getElementById('cw-msgs');
+  if(msgs) msgs.innerHTML = '';
+  _chatMsgs = [];
+  _scrollToBottom();
+  setTimeout(function(){ var ta=document.getElementById('cw-textarea'); if(ta) ta.focus(); }, 100);
 }
 
 function _showChatBadge(n){
