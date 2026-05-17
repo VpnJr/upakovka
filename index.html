@@ -9,11 +9,13 @@
 
 <header class="header">
   <a href="index.html" class="logo">Upakovka<span>09</span></a>
-  <div class="header-search">
+  <div class="header-search" id="header-search-wrap">
     <span class="hs-icon">🔍</span>
     <input type="text" id="header-search" placeholder="Поиск товаров..."
       oninput="setSearch(this.value);var s=document.getElementById('sidebar-search');if(s)s.value=this.value"/>
   </div>
+  <!-- Кнопка поиска для мобильных -->
+  <button class="mobile-search-btn" id="mobile-search-btn" onclick="toggleMobileSearch()" title="Поиск">🔍</button>
   <div class="header-right">
     <div class="header-contacts">
       <a href="tel:+79380000000" class="hc-item">📞 +7 (938) 000-00-00</a>
@@ -26,6 +28,12 @@
     </button>
   </div>
 </header>
+
+<!-- Мобильная строка поиска -->
+<div class="mobile-search-bar" id="mobile-search-bar">
+  <input type="text" id="mobile-search-input" placeholder="Поиск товаров..."
+    oninput="setSearch(this.value)"/>
+</div>
 
 <section id="catalog" class="catalog-section">
   <div class="catalog-layout">
@@ -159,6 +167,13 @@
 <script>
   refreshCartUI();
   // Всегда загружаем актуальные товары из Firebase (не из localStorage кеша)
+  function toggleMobileSearch(){
+    var bar = document.getElementById('mobile-search-bar');
+    var inp = document.getElementById('mobile-search-input');
+    bar.classList.toggle('open');
+    if(bar.classList.contains('open') && inp) setTimeout(function(){inp.focus();},50);
+  }
+
   loadProductsFromServer(function(){
     buildFilterPanel();
     renderCatalog();
