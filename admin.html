@@ -1306,6 +1306,8 @@ function renderClientsList(){
   }).join('');
 }
 
+function escAdm(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 function renderAdminChats(){
   var listEl = document.getElementById('admin-chat-list');
   if(!listEl) return;
